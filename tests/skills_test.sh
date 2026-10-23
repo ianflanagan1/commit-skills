@@ -2,9 +2,9 @@
 # Structure of skills/: the shared files each skill inlines and links. Run with tests/run.sh.
 #
 # The shared references a skill inlines fix its approach to splitting work into commits:
-#   agnostic        the user chose what goes in the commit   commit-message, commit-staged
-#   atomic          atomic-commits.md                        commit, push, re-commit
-#   review-ordered  its own Approach section                 re-commit-for-squash
+#   agnostic        the user chose what goes in the commit   ianf-commit-message, ianf-commit-staged
+#   atomic          atomic-commits.md                        ianf-commit, ianf-push, ianf-re-commit
+#   review-ordered  its own Approach section                 ianf-re-commit-for-squash
 
 # shellcheck source=tests/helpers.sh
 . "$(dirname "$0")/helpers.sh"
@@ -68,33 +68,33 @@ EOF
 }
 
 test_agnostic_skills_inline_no_approach() {
-    assertEquals 'commit-message-guide.md' "$(inlined commit-message)"
-    assertEquals 'commit-message-guide.md commit-safety.md' "$(inlined commit-staged)"
+    assertEquals 'commit-message-guide.md' "$(inlined ianf-commit-message)"
+    assertEquals 'commit-message-guide.md commit-safety.md' "$(inlined ianf-commit-staged)"
 }
 
 test_atomic_skills_inline_the_atomic_commit_rules() {
-    assertEquals 'commit push re-commit' "$(skills_inlining atomic-commits.md)"
-    assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md staging.md' "$(inlined commit)"
-    assertEquals "$(inlined commit)" "$(inlined push)"
-    assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined re-commit)"
+    assertEquals 'ianf-commit ianf-push ianf-re-commit' "$(skills_inlining atomic-commits.md)"
+    assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md staging.md' "$(inlined ianf-commit)"
+    assertEquals "$(inlined ianf-commit)" "$(inlined ianf-push)"
+    assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined ianf-re-commit)"
 }
 
 test_push_commits_exactly_as_commit_does() {
-    assertEquals "$(procedure commit)" "$(procedure push)"
+    assertEquals "$(procedure ianf-commit)" "$(procedure ianf-push)"
 }
 
 test_push_has_a_push_section_and_commit_does_not() {
-    assertContains "$(cat "$root/skills/push/SKILL.md")" '## Push'
-    assertNotContains "$(cat "$root/skills/commit/SKILL.md")" '## Push'
+    assertContains "$(cat "$root/skills/ianf-push/SKILL.md")" '## Push'
+    assertNotContains "$(cat "$root/skills/ianf-commit/SKILL.md")" '## Push'
 }
 
 test_only_push_is_allowed_to_run_git_push() {
-    assertEquals "$root/skills/push/SKILL.md" "$(grep -l '^allowed-tools:.*git push' "$root"/skills/*/SKILL.md)"
+    assertEquals "$root/skills/ianf-push/SKILL.md" "$(grep -l '^allowed-tools:.*git push' "$root"/skills/*/SKILL.md)"
 }
 
 test_the_review_ordered_skill_states_its_own_approach() {
-    assertEquals 'commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined re-commit-for-squash)"
-    assertContains "$(cat "$root/skills/re-commit-for-squash/SKILL.md")" '## Approach: review-ordered commits'
+    assertEquals 'commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined ianf-re-commit-for-squash)"
+    assertContains "$(cat "$root/skills/ianf-re-commit-for-squash/SKILL.md")" '## Approach: review-ordered commits'
 }
 
 test_no_skill_has_more_than_one_approach() {

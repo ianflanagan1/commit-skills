@@ -1,5 +1,5 @@
 ---
-name: re-commit-for-squash
+name: ianf-re-commit-for-squash
 description: Rework the branch's commits and any uncommitted work into commits ordered for easy review, for a branch that will be squash-merged, with a message for each and a suggested squash message. Prints only the new commits and the squash message.
 disable-model-invocation: true
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*)

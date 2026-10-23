@@ -1,5 +1,5 @@
 ---
-name: commit-message
+name: ianf-commit-message
 description: Suggest a commit message for the currently staged changes, matching the repository's existing style. Prints only the message.
 disable-model-invocation: true
 allowed-tools: Bash(sh *scripts/staged-context.sh*), Bash(echo "exit $?")

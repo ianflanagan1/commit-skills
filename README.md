@@ -1,6 +1,6 @@
 # commit-skills
 
-Claude Code skills for commit messages. `/commit-message` suggests a message for whatever is staged when you run it and prints only the message. `/commit-staged` commits what is staged. `/commit` splits all uncommitted work into atomic commits, and `/push` does the same and pushes. `/re-commit` and `/re-commit-for-squash` rework a whole branch, committed or not, into atomic commits or into commits ordered for review.
+Claude Code skills for commit messages. `/ianf-commit-message` suggests a message for whatever is staged when you run it and prints only the message. `/ianf-commit-staged` commits what is staged. `/ianf-commit` splits all uncommitted work into atomic commits, and `/ianf-push` does the same and pushes. `/ianf-re-commit` and `/ianf-re-commit-for-squash` rework a whole branch, committed or not, into atomic commits or into commits ordered for review.
 
 ## Why
 
@@ -13,25 +13,25 @@ Asking an agent to "write a commit message" usually gets a message for the whole
 3. Replies with the message in a single code block. No explanation, no alternatives, no trailers the repo doesn't already use. It never commits.
 
 ```
-/commit-message
+/ianf-commit-message
 ```
 
 The skills are meant to be run bare. Text typed after the name is treated as a note, for the rare case the diff can't show something, such as a ticket number or the reason for a change. Without one, the skill won't invent a reason that isn't in the diff.
 
 ## Committing staged changes
 
-`/commit-staged` writes the message the same way and then commits the index with it, printing `✅ Committed.` and the new commit's short hash and subject. It commits exactly what is staged: it never stages or unstages files, amends or skips hooks. If the commit fails it prints `❌ Commit failed.`, git's error and the message it tried.
+`/ianf-commit-staged` writes the message the same way and then commits the index with it, printing `✅ Committed.` and the new commit's short hash and subject. It commits exactly what is staged: it never stages or unstages files, amends or skips hooks. If the commit fails it prints `❌ Commit failed.`, git's error and the message it tried.
 
 ```
-/commit-staged
+/ianf-commit-staged
 ```
 
 ## Committing everything
 
-`/commit` takes all uncommitted work (staged, unstaged and untracked), splits it into atomic commits ordered so each one works on its own, writes a message for each and commits them. It prints `✅ Committed.` (or `🛑 Stopped.` if a hook or signing failure stops it part way), the new commits and the `git reset <start>` command that undoes the run. In a repo with no commits it makes a single `Initialise` commit instead of splitting.
+`/ianf-commit` takes all uncommitted work (staged, unstaged and untracked), splits it into atomic commits ordered so each one works on its own, writes a message for each and commits them. It prints `✅ Committed.` (or `🛑 Stopped.` if a hook or signing failure stops it part way), the new commits and the `git reset <start>` command that undoes the run. In a repo with no commits it makes a single `Initialise` commit instead of splitting.
 
 ```
-/commit
+/ianf-commit
 ```
 
 It builds every commit in the index and never touches the working tree, using two scripts in `shared/scripts/`:
@@ -44,25 +44,25 @@ It leaves out secrets, build output and scratch files and lists them. Its `allow
 
 ## Committing and pushing
 
-`/push` does exactly what `/commit` does, then pushes the branch once, and only if every commit was made. With no upstream it sets one with `git push -u`, when the repo has exactly one remote. It never forces, pulls or rebases, and doesn't push a detached `HEAD`. It prints `✅ Pushed.` and where the commits went. If the push is rejected it prints `❌ Push failed.` and git's error, and the commits stay. Only `/push` pre-approves `git push`. `/commit` never pushes.
+`/ianf-push` does exactly what `/ianf-commit` does, then pushes the branch once, and only if every commit was made. With no upstream it sets one with `git push -u`, when the repo has exactly one remote. It never forces, pulls or rebases, and doesn't push a detached `HEAD`. It prints `✅ Pushed.` and where the commits went. If the push is rejected it prints `❌ Push failed.` and git's error, and the commits stay. Only `/ianf-push` pre-approves `git push`. `/ianf-commit` never pushes.
 
 ```
-/push
+/ianf-push
 ```
 
 ## Reworking a branch
 
-`/re-commit` takes everything on the branch since it started, its commits and any uncommitted work, and rebuilds it as atomic commits the same way `/commit` does. It's for a branch whose history will be kept: each commit builds and works, so it can be reverted, cherry-picked or bisected. If the commits already fit and nothing is uncommitted, it says so and changes nothing.
+`/ianf-re-commit` takes everything on the branch since it started, its commits and any uncommitted work, and rebuilds it as atomic commits the same way `/ianf-commit` does. It's for a branch whose history will be kept: each commit builds and works, so it can be reverted, cherry-picked or bisected. If the commits already fit and nothing is uncommitted, it says so and changes nothing.
 
-`/re-commit-for-squash` does the same for a branch that will be squash-merged, where the commits are lost on merge and only serve the review. Each mechanical change (a rename with every use of it, a namespace move, a lint-rule pass) gets a commit of its own, ahead of the behaviour changes, so a reviewer can skim it. Commits don't have to build on their own. It also prints a suggested message for the squash merge.
+`/ianf-re-commit-for-squash` does the same for a branch that will be squash-merged, where the commits are lost on merge and only serve the review. Each mechanical change (a rename with every use of it, a namespace move, a lint-rule pass) gets a commit of its own, ahead of the behaviour changes, so a reviewer can skim it. Commits don't have to build on their own. It also prints a suggested message for the squash merge.
 
 ```
-/re-commit
-/re-commit-for-squash
+/ianf-re-commit
+/ianf-re-commit-for-squash
 ```
 
 The branch's base is where its work started. `shared/scripts/branch-context.sh` takes the first of:
-1. The branch or commit you name after the skill (`/re-commit develop`).
+1. The branch or commit you name after the skill (`/ianf-re-commit develop`).
 2. On the default branch, or on the branch the setting below names, its upstream, so only unpushed commits are reworked.
 3. The setting `commit-skills.base`, for a repo where every feature branch starts from the same branch:
 
@@ -74,7 +74,7 @@ The branch's base is where its work started. `shared/scripts/branch-context.sh` 
 
 The output names the base and how it was found, with `guessed` for the last.
 
-Both skills refuse a branch with merge commits (rebase it onto its base first) or with commits by someone else, which also catches a base that is too far back. They reset the branch to the base without touching the working tree, then build each commit in the index as `/commit` does, taking intermediate versions of a file from the original commits with `stage-lines.sh -r <commit>`. They never push. If commits were already pushed, the output says that publishing needs `git push --force-with-lease`. `git reset <start>` undoes a run, leaving any uncommitted work unstaged.
+Both skills refuse a branch with merge commits (rebase it onto its base first) or with commits by someone else, which also catches a base that is too far back. They reset the branch to the base without touching the working tree, then build each commit in the index as `/ianf-commit` does, taking intermediate versions of a file from the original commits with `stage-lines.sh -r <commit>`. They never push. If commits were already pushed, the output says that publishing needs `git push --force-with-lease`. `git reset <start>` undoes a run, leaving any uncommitted work unstaged.
 
 ## Tests
 
@@ -89,7 +89,7 @@ Without devbox, install shunit2 (`brew install shunit2`, `apt install shunit2`) 
 
 ## Problems
 
-These skills don't report their own problems. If you use [`/improve-skill`](https://github.com/ianflanagan1/claude-improve-skill), a rule in your global `CLAUDE.md` has Claude log problems with any skill, these included, for it to fix.
+These skills don't report their own problems. If you use [`/ianf-improve-skill`](https://github.com/ianflanagan1/improve-skill), a rule in your global `CLAUDE.md` has Claude log problems with any skill, these included, for it to fix.
 
 ## Approaches
 
@@ -97,9 +97,9 @@ Each skill follows one approach to deciding what goes in a commit:
 
 | Approach | Skills | Rule |
 |---|---|---|
-| Agnostic | `commit-message`, `commit-staged` | The user chose what goes in the commit; only the message is written. |
-| Atomic | `commit`, `push`, `re-commit` | Every commit holds one reason to change and leaves the project building and working, so it can be reverted, cherry-picked or bisected on its own. |
-| Review-ordered | `re-commit-for-squash` | The branch will be squash-merged, so commits are grouped for easy review: mechanical changes alone and first, only related work together. They don't have to build. |
+| Agnostic | `ianf-commit-message`, `ianf-commit-staged` | The user chose what goes in the commit; only the message is written. |
+| Atomic | `ianf-commit`, `ianf-push`, `ianf-re-commit` | Every commit holds one reason to change and leaves the project building and working, so it can be reverted, cherry-picked or bisected on its own. |
+| Review-ordered | `ianf-re-commit-for-squash` | The branch will be squash-merged, so commits are grouped for easy review: mechanical changes alone and first, only related work together. They don't have to build. |
 
 ## Shared files
 
@@ -107,11 +107,11 @@ Rules and scripts the skills share live once in `shared/`, and each skill links 
 
 - `commit-message-guide.md`: how messages are written (every skill)
 - `commit-safety.md`: how to run `git commit`, and never skipping hooks (every skill that commits)
-- `staging.md`: building commits in the index without touching the working tree, and handling hook rejections (`commit`, `push`, both `re-commit` skills)
-- `rework.md`: resetting a branch to its base to rebuild it (both `re-commit` skills)
-- `atomic-commits.md`: the atomic approach: grouping, ordering and checking each commit (`commit`, `push`, `re-commit`)
+- `staging.md`: building commits in the index without touching the working tree, and handling hook rejections (`ianf-commit`, `ianf-push`, `ianf-re-commit` and `ianf-re-commit-for-squash`)
+- `rework.md`: resetting a branch to its base to rebuild it (`ianf-re-commit` and `ianf-re-commit-for-squash`)
+- `atomic-commits.md`: the atomic approach: grouping, ordering and checking each commit (`ianf-commit`, `ianf-push`, `ianf-re-commit`)
 
-The review-ordered approach is written into `re-commit-for-squash/SKILL.md` itself, since nothing else uses it.
+The review-ordered approach is written into `ianf-re-commit-for-squash/SKILL.md` itself, since nothing else uses it.
 
 The links make a skill's approach visible in its folder, and `tests/skills_test.sh` fails if a skill inlines the files of the wrong approach. When vendoring a skill, copy it with `cp -RL` so the links become real files.
 
@@ -120,8 +120,8 @@ The links make a skill's approach visible in its folder, and `tests/skills_test.
 The scripts in `shared/scripts/` are POSIX `sh` and work without an agent. Each prints its usage with `-h`. The three context scripts each gather what one kind of skill needs:
 
 ```sh
-sh shared/scripts/staged-context.sh            # the staged changes (commit-message, commit-staged)
-sh shared/scripts/uncommitted-context.sh       # all uncommitted work, lines numbered (commit, push)
+sh shared/scripts/staged-context.sh            # the staged changes (ianf-commit-message, ianf-commit-staged)
+sh shared/scripts/uncommitted-context.sh       # all uncommitted work, lines numbered (ianf-commit, ianf-push)
 sh shared/scripts/branch-context.sh [base]     # the branch since its base, lines numbered (both re-commit skills)
 ```
 
@@ -129,17 +129,18 @@ Each takes `-n <lines>` to truncate the diff after that many lines (default 2000
 
 ## Claude Code
 
-Install it as a plugin:
+Clone to `~/projects/claude/commit-skills`, then link each skill into your skills folder:
 
+```sh
+for s in ~/projects/claude/commit-skills/skills/*/; do
+    ln -s "${s%/}" ~/.claude/skills/"$(basename "$s")"
+done
 ```
-/plugin marketplace add ianflanagan1/claude-commit-skills
-/plugin install commit-skills@commit-skills
-```
 
-Plugin skills are namespaced, so they're invoked as `/commit-skills:commit-message`, `/commit-skills:commit-staged`, `/commit-skills:commit`, `/commit-skills:push`, `/commit-skills:re-commit` and `/commit-skills:re-commit-for-squash`.
+Each is invoked by its folder's name, such as `/ianf-commit`. The `ianf-` prefix keeps them from colliding with other skills of the same name.
 
-You can vendor them instead, so collaborators get them with the repo: `cp -RL skills/<name> .claude/skills/` in your project, and each is invoked as `/<name>`. Don't install them both ways at once, or Claude will see each skill twice.
+You can vendor them instead, so collaborators get them with the repo: `cp -RL skills/<name> .claude/skills/` in your project. Don't install them both ways at once, or Claude will see each skill twice.
 
 ## Other agents
 
-`skills/commit-message/SKILL.md` uses the [Agent Skills](https://agentskills.io) format, so other agents that support skills can load it. Copy it with `cp -RL skills/commit-message <your agent's skills directory>/` so the linked files become real files alongside `SKILL.md`. Slash-command arguments may behave differently, so just ask in plain language, for example "suggest a commit message for what's staged".
+`skills/ianf-commit-message/SKILL.md` uses the [Agent Skills](https://agentskills.io) format, so other agents that support skills can load it. Copy it with `cp -RL skills/ianf-commit-message <your agent's skills directory>/` so the linked files become real files alongside `SKILL.md`. Slash-command arguments may behave differently, so just ask in plain language, for example "suggest a commit message for what's staged".

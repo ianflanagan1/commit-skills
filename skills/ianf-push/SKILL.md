@@ -1,5 +1,5 @@
 ---
-name: push
+name: ianf-push
 description: Split all uncommitted work into atomic commits that each leave the project working, write a message for each in the repository's style, commit them and push the branch. Prints only the new commits' hashes and subjects and where they were pushed.
 disable-model-invocation: true
 allowed-tools: Bash(sh *scripts/uncommitted-context.sh*), Bash(echo "exit $?"), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm:*), Bash(git reset:*), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git commit:*), Bash(git worktree:*), Bash(git remote:*), Bash(git rev-list:*), Bash(git push:*)

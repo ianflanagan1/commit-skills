@@ -1,5 +1,5 @@
 ---
-name: commit-staged
+name: ianf-commit-staged
 description: Commit the currently staged changes with a message that matches the repository's existing style. Prints only the new commit's hash and subject.
 disable-model-invocation: true
 allowed-tools: Bash(sh *scripts/staged-context.sh*), Bash(echo "exit $?"), Bash(git diff:*), Bash(git commit:*), Bash(git log:*)
