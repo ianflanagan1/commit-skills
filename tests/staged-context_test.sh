@@ -46,6 +46,17 @@ test_reports_a_merge_in_progress() {
     assertContains "$(sh "$staged_context")" '(a merge is in progress)'
 }
 
+test_reports_a_detached_head() {
+    git checkout -q --detach
+    lines a b c d >f && git add f
+    assertContains "$(sh "$staged_context")" '(detached HEAD: the commit will be on no branch)'
+}
+
+test_says_nothing_of_a_detached_head_on_a_branch() {
+    lines a b c d >f && git add f
+    assertNotContains "$(sh "$staged_context")" 'detached HEAD'
+}
+
 test_marks_the_first_commit() {
     rm -rf .git && new_repo
     git add f

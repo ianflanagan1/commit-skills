@@ -3,7 +3,7 @@
 #
 # Prints, in order:
 #   - recent commit subjects, so messages can match the repository's style
-#   - any merge, rebase, cherry-pick or revert in progress
+#   - any merge, rebase, cherry-pick or revert in progress, and a detached HEAD
 #   - the status of every changed and untracked file
 #   - the diff of every changed and untracked file against HEAD, with changed lines numbered
 #     as stage-lines.sh numbers them, without lockfiles and minified files, truncated after a
@@ -50,6 +50,7 @@ git_dir=$(git rev-parse --git-dir)
 [ ! -d "$git_dir/rebase-merge" ] && [ ! -d "$git_dir/rebase-apply" ] || echo '(a rebase is in progress)'
 [ ! -f "$git_dir/CHERRY_PICK_HEAD" ] || echo '(a cherry-pick is in progress)'
 [ ! -f "$git_dir/REVERT_HEAD" ] || echo '(a revert is in progress)'
+git symbolic-ref -q HEAD >/dev/null || echo '(detached HEAD: new commits will be on no branch)'
 
 echo
 echo '## Status (X = staged, Y = unstaged, ?? = untracked)'

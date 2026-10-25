@@ -38,4 +38,4 @@ If the commit fails (a hook rejects it, signing fails, nothing left to commit), 
 
 ## Output
 
-On success, reply with a line `✅ Committed.`, then the `git log` line in one fenced `text` code block, and nothing else.
+On success, reply with a line `✅ Committed.`, then the `git log` line in one fenced `text` code block, then, only if the Gather section shows a detached `HEAD`, the line `On no branch: git switch -c <name> keeps this commit.`, and nothing else.

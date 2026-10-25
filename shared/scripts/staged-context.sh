@@ -3,6 +3,7 @@
 #
 # Prints, in order:
 #   - recent commit subjects, so the message can match the repository's style
+#   - a merge in progress, and a detached HEAD
 #   - the staged files, with change counts, renames, creations and deletions
 #   - the staged diff, without lockfiles and minified files, truncated after a line limit
 #
@@ -14,7 +15,7 @@
 set -eu
 
 usage() {
-    sed -n '9,10p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '10,11p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 max=2000
@@ -42,6 +43,7 @@ else
 fi
 git_dir=$(git rev-parse --git-dir)
 [ ! -f "$git_dir/MERGE_HEAD" ] || echo '(a merge is in progress)'
+git symbolic-ref -q HEAD >/dev/null || echo '(detached HEAD: the commit will be on no branch)'
 
 echo
 echo '## Staged files'

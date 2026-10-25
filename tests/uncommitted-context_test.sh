@@ -71,6 +71,17 @@ test_reports_a_rebase_in_progress() {
     assertContains "$(sh "$uncommitted_context")" '(a rebase is in progress)'
 }
 
+test_reports_a_detached_head() {
+    git checkout -q --detach
+    lines x >new
+    assertContains "$(sh "$uncommitted_context")" '(detached HEAD: new commits will be on no branch)'
+}
+
+test_says_nothing_of_a_detached_head_on_a_branch() {
+    lines x >new
+    assertNotContains "$(sh "$uncommitted_context")" 'detached HEAD'
+}
+
 test_works_before_the_first_commit() {
     rm -rf .git && new_repo
     out=$(sh "$uncommitted_context")
