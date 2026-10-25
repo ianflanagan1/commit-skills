@@ -1,13 +1,13 @@
 ---
-name: ianf-re-commit
-description: Rework the branch's commits and any uncommitted work into atomic commits that each leave the project working, with a message for each in the repository's style. Prints only the new commits' hashes and subjects.
+name: ianf-commit-rebuild
+description: Rework the commits since the base, on a branch or a detached HEAD, and any uncommitted work into atomic commits that each leave the project working, with a message for each in the repository's style. Prints only the new commits' hashes and subjects.
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*), Bash(git worktree:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*), Bash(git worktree:*)
 ---
 
-# Re-commit
+# Rebuild
 
-Rework everything on the branch since its base, committed or not, into a series of atomic commits, oldest idea first.
+Rework everything since the base, committed or not, into a series of atomic commits, oldest idea first.
 
 If a `cat` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
 
@@ -47,5 +47,6 @@ Start with one line: `✅ Reworked.` if every commit was made, or `🛑 Stopped.
 - files left uncommitted, and why
 - files you edited to get past a hook, and what you changed (`git reset <start>` doesn't undo these)
 - commits whose check wasn't run, or a failure, the message you tried and the fix you propose
+- a detached `HEAD`: `On no branch: git switch -c <name> keeps these commits.`
 
 Nothing else: no preamble, explanation of the grouping or sign-off.

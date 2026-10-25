@@ -1,6 +1,14 @@
 # commit-skills
 
-Claude Code skills for commit messages. `/ianf-commit-message` suggests a message for whatever is staged when you run it and prints only the message. `/ianf-commit-staged` commits what is staged. `/ianf-commit` splits all uncommitted work into atomic commits, and `/ianf-push` does the same and pushes. `/ianf-re-commit` and `/ianf-re-commit-for-squash` rework a whole branch, committed or not, into atomic commits or into commits ordered for review.
+Claude Code skills for commit messages. `/ianf-commit-message` suggests a message for whatever is staged when you run it and prints only the message. `/ianf-commit-staged` commits what is staged. `/ianf-commit` splits all uncommitted work into atomic commits. `/ianf-commit-amend` folds uncommitted work into the unpushed commits it belongs to, or makes the changes you ask for to them, and leaves the rest as they were. `/ianf-commit-rebuild` and `/ianf-commit-rebuild-for-squash` rework a whole branch, committed or not, into atomic commits or into commits ordered for review.
+
+They differ in how much history they may change:
+
+| Skill | Existing commits | Use it when |
+|---|---|---|
+| `/ianf-commit` | none: new commits go on top | the work is new |
+| `/ianf-commit-amend` | only the unpushed ones the plan names; the rest keep their content and message | a decision changed after committing, before pushing |
+| `/ianf-commit-rebuild`, `/ianf-commit-rebuild-for-squash` | every unpushed one, regrouped from scratch | the branch's history needs reorganising |
 
 ## Why
 
@@ -40,29 +48,46 @@ It builds every commit in the index and never touches the working tree, using tw
 
 Where it can, it checks each commit by running the repo's quick build or test command in a throwaway `git worktree`.
 
-It leaves out secrets, build output and scratch files and lists them. Its `allowed-tools` pre-approve the git commands it uses while it runs.
+It leaves out secrets, build output and scratch files and lists them. Its `allowed-tools` pre-approve the git commands it uses while it runs, in the forms it uses: `git reset` only to clear the index or undo its own last commit, and `git rm` only with `--cached`. Anything else, such as resetting the branch to another commit, asks first.
 
-## Committing and pushing
+## Pushing
 
-`/ianf-push` does exactly what `/ianf-commit` does, then pushes the branch once, and only if every commit was made. With no upstream it sets one with `git push -u`, when the repo has exactly one remote. It never forces, pulls or rebases, and doesn't push a detached `HEAD`. It prints `✅ Pushed.` and where the commits went. If the push is rejected it prints `❌ Push failed.` and git's error, and the commits stay. Only `/ianf-push` pre-approves `git push`. `/ianf-commit` never pushes.
+No skill pushes, and none pre-approves `git push`: pushing needs no judgement, so it's left to git. After `/ianf-commit`, run `git push` (`! git push` in Claude Code), or [repo-fix](https://github.com/ianflanagan1/repo-tools#repo-fix), which pushes each branch to its upstream, or with none to the only remote.
 
-```
-/ianf-push
-```
+## Amending commits
 
-## Reworking a branch
-
-`/ianf-re-commit` takes everything on the branch since it started, its commits and any uncommitted work, and rebuilds it as atomic commits the same way `/ianf-commit` does. It's for a branch whose history will be kept: each commit builds and works, so it can be reverted, cherry-picked or bisected. If the commits already fit and nothing is uncommitted, it says so and changes nothing.
-
-`/ianf-re-commit-for-squash` does the same for a branch that will be squash-merged, where the commits are lost on merge and only serve the review. Each mechanical change (a rename with every use of it, a namespace move, a lint-rule pass) gets a commit of its own, ahead of the behaviour changes, so a reviewer can skim it. Commits don't have to build on their own. It also prints a suggested message for the squash merge.
+`/ianf-commit-amend` changes the branch's unpushed commits as little as the work needs. Run bare, it folds uncommitted work into the commits it belongs to, and makes new commits, in the right place, for work that belongs to none. With a note, it does what you ask: reword a commit, insert one, take lines out of a commit or move them to another, split, squash, reorder or drop commits.
 
 ```
-/ianf-re-commit
-/ianf-re-commit-for-squash
+/ianf-commit-amend
+/ianf-commit-amend move the config change into the commit that added the endpoint
 ```
 
-The branch's base is where its work started. `shared/scripts/branch-context.sh` takes the first of:
-1. The branch or commit you name after the skill (`/ianf-re-commit develop`).
+Commits the plan doesn't touch keep their content, message and author, and those before the first change keep their hashes. Every changed commit still builds and works, as with `/ianf-commit`. If the work would change most commits, or needs them regrouped, it says so and suggests `/ianf-commit-rebuild` instead.
+
+Claude decides what goes where. Two scripts in `shared/scripts/` do the rest, deterministically:
+- `amend-context.sh` follows each uncommitted hunk with the commits that last changed its lines, found with `git blame`. A hunk can fold into the newest of those or a later commit without conflict, the rule [git-absorb](https://github.com/tummychow/git-absorb) uses.
+- `rewrite.sh` carries out the plan. `piece` saves chosen lines, of uncommitted work or of a commit, as an object, without touching anything. `run` builds the plan's commits in memory with `git merge-tree` and `git commit-tree`. `apply` moves `HEAD` to them once Claude has checked each new commit, refusing if `HEAD` has moved since the start.
+
+So a plan that conflicts stops with nothing changed: no rebase is left half done, and the branch, index and working tree are as they were. `git reset <start>` undoes an applied run. Like `git rebase`, the rewritten commits don't run commit hooks; the skill runs the repo's quick check on each new commit instead.
+
+## Rebuilding a branch
+
+`/ianf-commit-rebuild` takes everything on the branch since it started, its commits and any uncommitted work, and rebuilds it as atomic commits the same way `/ianf-commit` does. It's for a branch whose history will be kept: each commit builds and works, so it can be reverted, cherry-picked or bisected. If the commits already fit and nothing is uncommitted, it says so and changes nothing.
+
+`/ianf-commit-rebuild-for-squash` does the same for a branch that will be squash-merged, where the commits are lost on merge and only serve the review. Each mechanical change (a rename with every use of it, a namespace move, a lint-rule pass) gets a commit of its own, ahead of the behaviour changes, so a reviewer can skim it. Commits don't have to build on their own. It also prints a suggested message for the squash merge.
+
+```
+/ianf-commit-rebuild
+/ianf-commit-rebuild-for-squash
+```
+
+Both skills refuse merge commits since the base (rebase onto it first) or commits by someone else, which also catches a base that is too far back. They reset the branch (or a detached `HEAD`) to the base without touching the working tree, then build each commit in the index as `/ianf-commit` does, taking intermediate versions of a file from the original commits with `stage-lines.sh -r <commit>`. They never push. `git reset <start>` undoes a run, leaving any uncommitted work unstaged.
+
+## The base
+
+The amend and rebuild skills change only the commits since the base, which is where the work started. `shared/scripts/branch-base.sh`, which both skills' context scripts share, takes the first of:
+1. The branch or commit you name after the skill (`/ianf-commit-rebuild develop`).
 2. On the default branch, or on the branch the setting below names, its upstream, so only unpushed commits are reworked.
 3. The setting `commit-skills.base`, for a repo where every feature branch starts from the same branch:
 
@@ -72,9 +97,17 @@ The branch's base is where its work started. `shared/scripts/branch-context.sh` 
 
 4. A guess: the nearest other branch, local or remote-tracking, meaning the one that leaves the fewest commits on this branch. That's usually the branch it was started from. If two branches are equally near but disagree, it asks for the base.
 
+Unless you named the base, it then moves past every commit already on a remote, so pushed commits are never changed by default. To change them anyway, name the base; the output then says how many were already pushed, and that publishing needs `git push --force-with-lease`.
+
 The output names the base and how it was found, with `guessed` for the last.
 
-Both skills refuse a branch with merge commits (rebase it onto its base first) or with commits by someone else, which also catches a base that is too far back. They reset the branch to the base without touching the working tree, then build each commit in the index as `/ianf-commit` does, taking intermediate versions of a file from the original commits with `stage-lines.sh -r <commit>`. They never push. If commits were already pushed, the output says that publishing needs `git push --force-with-lease`. `git reset <start>` undoes a run, leaving any uncommitted work unstaged.
+## A detached HEAD
+
+Every skill works on commits that are on no branch, as `git commit` and `git reset` do: they move `HEAD` itself, and no branch moves. Each says so in its output, with `git switch -c <name>` to keep the new commits before you switch away from them.
+
+On a detached `HEAD` there is no current branch, so the base comes from step 1, 3 or 4 above, never from an upstream. The guess still works: detached partway along a branch with new commits on top, that branch is the nearest, so only the new commits are reworked. A rework that would leave a branch holding the originals of the commits it rewrites (a base named further back, say) is refused, since that branch would keep them; switch to the branch and run there instead.
+
+A rebase stopped at an `edit` step also detaches `HEAD`. `/ianf-commit` and the amend and rebuild skills refuse to run while a rebase is in progress; `/ianf-commit-staged` commits, as `git commit` would.
 
 ## Tests
 
@@ -98,8 +131,8 @@ Each skill follows one approach to deciding what goes in a commit:
 | Approach | Skills | Rule |
 |---|---|---|
 | Agnostic | `ianf-commit-message`, `ianf-commit-staged` | The user chose what goes in the commit; only the message is written. |
-| Atomic | `ianf-commit`, `ianf-push`, `ianf-re-commit` | Every commit holds one reason to change and leaves the project building and working, so it can be reverted, cherry-picked or bisected on its own. |
-| Review-ordered | `ianf-re-commit-for-squash` | The branch will be squash-merged, so commits are grouped for easy review: mechanical changes alone and first, only related work together. They don't have to build. |
+| Atomic | `ianf-commit`, `ianf-commit-amend`, `ianf-commit-rebuild` | Every commit holds one reason to change and leaves the project building and working, so it can be reverted, cherry-picked or bisected on its own. |
+| Review-ordered | `ianf-commit-rebuild-for-squash` | The branch will be squash-merged, so commits are grouped for easy review: mechanical changes alone and first, only related work together. They don't have to build. |
 
 ## Shared files
 
@@ -107,25 +140,28 @@ Rules and scripts the skills share live once in `shared/`, and each skill links 
 
 - `commit-message-guide.md`: how messages are written (every skill)
 - `commit-safety.md`: how to run `git commit`, and never skipping hooks (every skill that commits)
-- `staging.md`: building commits in the index without touching the working tree, and handling hook rejections (`ianf-commit`, `ianf-push`, `ianf-re-commit` and `ianf-re-commit-for-squash`)
-- `rework.md`: resetting a branch to its base to rebuild it (`ianf-re-commit` and `ianf-re-commit-for-squash`)
-- `atomic-commits.md`: the atomic approach: grouping, ordering and checking each commit (`ianf-commit`, `ianf-push`, `ianf-re-commit`)
+- `staging.md`: building commits in the index without touching the working tree, and handling hook rejections (`ianf-commit`, `ianf-commit-rebuild` and `ianf-commit-rebuild-for-squash`)
+- `rework.md`: resetting a branch to its base to rebuild it (`ianf-commit-rebuild` and `ianf-commit-rebuild-for-squash`)
+- `atomic-commits.md`: the atomic approach: grouping, ordering and checking each commit (`ianf-commit`, `ianf-commit-rebuild`)
 
-The review-ordered approach is written into `ianf-re-commit-for-squash/SKILL.md` itself, since nothing else uses it.
+The review-ordered approach is written into `ianf-commit-rebuild-for-squash/SKILL.md` itself, since nothing else uses it. `ianf-commit-amend` states the atomic approach in its own `SKILL.md`, since it builds no commit in the index and checks commits before applying them rather than undoing them.
 
 The links make a skill's approach visible in its folder, and `tests/skills_test.sh` fails if a skill inlines the files of the wrong approach. When vendoring a skill, copy it with `cp -RL` so the links become real files.
 
 ## Scripts
 
-The scripts in `shared/scripts/` are POSIX `sh` and work without an agent. Each prints its usage with `-h`. The three context scripts each gather what one kind of skill needs:
+The scripts in `shared/scripts/` are POSIX `sh` and work without an agent. Each prints its usage with `-h`. The four context scripts each gather what one kind of skill needs:
 
 ```sh
 sh shared/scripts/staged-context.sh            # the staged changes (ianf-commit-message, ianf-commit-staged)
-sh shared/scripts/uncommitted-context.sh       # all uncommitted work, lines numbered (ianf-commit, ianf-push)
-sh shared/scripts/branch-context.sh [base]     # the branch since its base, lines numbered (both re-commit skills)
+sh shared/scripts/uncommitted-context.sh       # all uncommitted work, lines numbered (ianf-commit)
+sh shared/scripts/amend-context.sh [base]      # the commits since the base, and uncommitted work traced to them (ianf-commit-amend)
+sh shared/scripts/branch-context.sh [base]     # the branch since its base, lines numbered (both rebuild skills)
 ```
 
-Each takes `-n <lines>` to truncate the diff after that many lines (default 2000 for `staged-context.sh`, 3000 for the others). Lockfiles and minified files are listed but left out of the diff. They exit with 0 when they print changes, 1 when there is nothing to commit or rework, and 2 on a usage error or outside a git work tree (`branch-context.sh` also when it finds no base).
+Each takes `-n <lines>` to truncate the diff after that many lines (default 2000 for `staged-context.sh`, 3000 for the others). Lockfiles and minified files are listed but left out of the diff. They exit with 0 when they print changes, 1 when there is nothing to commit, amend or rework, and 2 on a usage error or outside a git work tree (`amend-context.sh` and `branch-context.sh` also when they find no base). Those two find the base with `branch-base.sh`, which they source.
+
+`rewrite.sh` needs git 2.40 or later, for `git merge-tree --merge-base`.
 
 ## Claude Code
 

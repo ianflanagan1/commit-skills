@@ -1,13 +1,13 @@
 ---
-name: ianf-re-commit-for-squash
-description: Rework the branch's commits and any uncommitted work into commits ordered for easy review, for a branch that will be squash-merged, with a message for each and a suggested squash message. Prints only the new commits and the squash message.
+name: ianf-commit-rebuild-for-squash
+description: Rework the commits since the base and any uncommitted work into commits ordered for easy review, for a branch that will be squash-merged, with a message for each and a suggested squash message. Prints only the new commits and the squash message.
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*)
 ---
 
-# Re-commit for squash
+# Rebuild for squash
 
-Rework everything on the branch since its base, committed or not, into a series of commits a reviewer can read one at a time.
+Rework everything since the base, committed or not, into a series of commits a reviewer can read one at a time.
 
 If a `cat` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
 
@@ -61,5 +61,6 @@ Start with one line: `✅ Reworked.` if every commit was made, or `🛑 Stopped.
 - files left uncommitted, and why
 - files you edited to get past a hook, and what you changed (`git reset <start>` doesn't undo these)
 - a failure, the message you tried and the fix you propose
+- a detached `HEAD`: `On no branch: git switch -c <name> keeps these commits.`
 
 If every commit was made, end with a line `Squash message:` and the message in one fenced `text` code block. Nothing else: no preamble, explanation of the grouping or sign-off.

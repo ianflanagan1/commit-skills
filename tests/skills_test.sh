@@ -3,8 +3,9 @@
 #
 # The shared references a skill inlines fix its approach to splitting work into commits:
 #   agnostic        the user chose what goes in the commit   ianf-commit-message, ianf-commit-staged
-#   atomic          atomic-commits.md                        ianf-commit, ianf-push, ianf-re-commit
-#   review-ordered  its own Approach section                 ianf-re-commit-for-squash
+#   atomic          atomic-commits.md                        ianf-commit, ianf-commit-rebuild
+#                   its own Approach section                 ianf-commit-amend, which builds no commit in the index
+#   review-ordered  its own Approach section                 ianf-commit-rebuild-for-squash
 
 # shellcheck source=tests/helpers.sh
 . "$(dirname "$0")/helpers.sh"
@@ -16,22 +17,12 @@ inlined() {
         sort | tr '\n' ' ' | sed 's/ $//'
 }
 
-# procedure skill: the skill's SKILL.md from its first section up to its Output section, without
-# a Push section: what it does to make its commits.
-procedure() {
-    awk '
-        /^## Output/ { exit }
-        /^## / { started = 1; skip = /^## Push/ }
-        started && !skip
-    ' "$root/skills/$1/SKILL.md"
-}
-
 # skills_inlining file: the skills whose SKILL.md inlines the reference, space-separated.
 skills_inlining() {
     for s in "$root"/skills/*/; do
         s=$(basename "$s")
-        case " $(inlined "$s") " in *" $1 "*) printf '%s ' "$s" ;; esac
-    done | sed 's/ $//'
+        case " $(inlined "$s") " in *" $1 "*) printf '%s\n' "$s" ;; esac
+    done | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//'
 }
 
 # loading_commands skill: the commands the skill's SKILL.md runs as it loads, other than cat (which
@@ -73,28 +64,51 @@ test_agnostic_skills_inline_no_approach() {
 }
 
 test_atomic_skills_inline_the_atomic_commit_rules() {
-    assertEquals 'ianf-commit ianf-push ianf-re-commit' "$(skills_inlining atomic-commits.md)"
+    assertEquals 'ianf-commit ianf-commit-rebuild' "$(skills_inlining atomic-commits.md)"
     assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md staging.md' "$(inlined ianf-commit)"
-    assertEquals "$(inlined ianf-commit)" "$(inlined ianf-push)"
-    assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined ianf-re-commit)"
+    assertEquals 'atomic-commits.md commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined ianf-commit-rebuild)"
 }
 
-test_push_commits_exactly_as_commit_does() {
-    assertEquals "$(procedure ianf-commit)" "$(procedure ianf-push)"
+test_no_skill_is_allowed_to_run_git_push() {
+    assertEquals '' "$(grep -l '^allowed-tools:.*git push' "$root"/skills/*/SKILL.md)"
 }
 
-test_push_has_a_push_section_and_commit_does_not() {
-    assertContains "$(cat "$root/skills/ianf-push/SKILL.md")" '## Push'
-    assertNotContains "$(cat "$root/skills/ianf-commit/SKILL.md")" '## Push'
+test_only_the_rework_skills_may_reset_to_another_commit() {
+    for skill in "$root"/skills/*/; do
+        skill=$(basename "$skill")
+        case $skill in ianf-commit-rebuild*) continue ;; esac
+        for command in 'git reset abc123' 'git reset --quiet abc123' 'git reset --hard'; do
+            if allows "$skill" "$command"; then fail "$skill allows: $command"; fi
+        done
+    done
 }
 
-test_only_push_is_allowed_to_run_git_push() {
-    assertEquals "$root/skills/ianf-push/SKILL.md" "$(grep -l '^allowed-tools:.*git push' "$root"/skills/*/SKILL.md)"
+test_commit_may_unstage_and_undo_its_own_last_commit() {
+    for command in 'git reset --quiet' 'git reset --soft HEAD~1'; do
+        allows ianf-commit "$command" || fail "ianf-commit does not allow: $command"
+    done
+}
+
+test_no_skill_may_delete_a_file_with_git_rm() {
+    for skill in "$root"/skills/*/; do
+        skill=$(basename "$skill")
+        if allows "$skill" 'git rm --quiet -- f'; then fail "$skill allows git rm without --cached"; fi
+    done
+}
+
+test_the_amend_skill_states_the_atomic_approach_and_commits_only_through_rewrite() {
+    assertEquals 'commit-message-guide.md' "$(inlined ianf-commit-amend)"
+    assertContains "$(cat "$root/skills/ianf-commit-amend/SKILL.md")" '## Approach: atomic commits'
+    for command in 'git commit -F -' 'git reset --quiet' 'git add f' 'git rebase -i HEAD~2'; do
+        if allows ianf-commit-amend "$command"; then fail "ianf-commit-amend allows: $command"; fi
+    done
+    allows ianf-commit-amend "sh /home/u/.claude/skills/ianf-commit-amend/scripts/rewrite.sh apply a b" ||
+        fail 'ianf-commit-amend does not allow rewrite.sh'
 }
 
 test_the_review_ordered_skill_states_its_own_approach() {
-    assertEquals 'commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined ianf-re-commit-for-squash)"
-    assertContains "$(cat "$root/skills/ianf-re-commit-for-squash/SKILL.md")" '## Approach: review-ordered commits'
+    assertEquals 'commit-message-guide.md commit-safety.md rework.md staging.md' "$(inlined ianf-commit-rebuild-for-squash)"
+    assertContains "$(cat "$root/skills/ianf-commit-rebuild-for-squash/SKILL.md")" '## Approach: review-ordered commits'
 }
 
 test_no_skill_has_more_than_one_approach() {

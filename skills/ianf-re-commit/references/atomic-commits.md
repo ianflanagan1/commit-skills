@@ -1,1 +1,0 @@
-../../../shared/references/atomic-commits.md

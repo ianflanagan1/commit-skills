@@ -57,7 +57,40 @@ test_this_branch_on_a_remote_is_not_its_base() {
     push_to_origin
     branch feature && commit_file g && git push -qu origin feature 2>/dev/null
     commit_file h
-    assertEquals "$main, origin/$main (guessed: nearest branch)" "$(base_line)"
+    assertContains "$(base_line)" "$main, origin/$main (guessed: nearest branch"
+}
+
+test_commits_already_on_a_remote_are_left_out_unless_the_base_is_given() {
+    main=$(git symbolic-ref --short HEAD)
+    push_to_origin
+    branch feature && commit_file g && git push -qu origin feature 2>/dev/null
+    commit_file h
+    assertEquals "$main, origin/$main (guessed: nearest branch; 1 pushed commits left as they are)" "$(base_line)"
+    assertEquals "$(git rev-parse --short HEAD~1)" "$(sh "$branch_context" | sed -n '/^## Base$/{n;p;}' | cut -d' ' -f1)"
+    assertContains "$(sh "$branch_context")" '1 commits since the base'
+    assertContains "$(sh "$branch_context" "$main")" '2 commits since the base'
+}
+
+test_a_configured_base_leaves_out_commits_already_on_a_remote() {
+    main=$(git symbolic-ref --short HEAD)
+    push_to_origin
+    branch feature && commit_file g && git push -qu origin feature 2>/dev/null
+    commit_file h
+    git config commit-skills.base "$main"
+    assertContains "$(sh "$branch_context")" '1 commits since the base'
+}
+
+test_a_branch_that_is_all_pushed_and_clean_has_nothing_to_rework() {
+    push_to_origin
+    branch feature && commit_file g && git push -qu origin feature 2>/dev/null
+    assertEquals 1 "$(exit_status sh "$branch_context")"
+}
+
+test_a_branch_that_is_all_pushed_reworks_only_its_uncommitted_work() {
+    push_to_origin
+    branch feature && commit_file g && git push -qu origin feature 2>/dev/null
+    lines x >new
+    assertContains "$(sh "$branch_context")" '0 commits since the base'
 }
 
 test_on_the_default_branch_only_unpushed_commits_are_reworked() {
@@ -112,6 +145,21 @@ test_a_new_branch_with_uncommitted_work_has_its_start_as_the_base() {
 test_a_given_base_that_is_not_a_commit_exits_2() {
     branch feature && commit_file g
     assertEquals 2 "$(exit_status sh "$branch_context" nope)"
+}
+
+test_commits_on_no_branch_take_the_nearest_branch_as_their_base() {
+    main=$(git symbolic-ref --short HEAD)
+    git checkout -q --detach && commit_file g
+    assertEquals "$main (guessed: nearest branch)" "$(base_line)"
+    assertContains "$(sh "$branch_context")" '1 commits since the base'
+}
+
+test_a_head_detached_at_a_branch_tip_has_no_commits_of_its_own_to_rework() {
+    branch feature && commit_file g
+    git checkout -q --detach
+    assertEquals 1 "$(exit_status sh "$branch_context")"
+    lines x >new
+    assertContains "$(sh "$branch_context")" '0 commits since the base'
 }
 
 # --- Exit status
@@ -171,6 +219,32 @@ test_warns_of_committed_files_that_are_now_ignored() {
     lines secret >.env && git add .env && commit_all env
     lines .env >.gitignore && commit_all ignore
     assertContains "$(sh "$branch_context")" '(ignored but committed: .env)'
+}
+
+test_warns_of_a_detached_head() {
+    git checkout -q --detach && commit_file g
+    assertContains "$(sh "$branch_context")" '(detached HEAD: the commits are on no branch, and reworking moves only HEAD)'
+}
+
+test_a_head_detached_partway_along_a_branch_takes_that_branch_as_its_base() {
+    branch feature && commit_file g && commit_file h
+    git checkout -q --detach HEAD~1 && commit_file i
+    assertEquals 'feature (guessed: nearest branch)' "$(base_line)"
+    assertNotContains "$(sh "$branch_context")" 'also on branch'
+}
+
+test_warns_of_commits_since_the_base_that_a_branch_also_holds_when_detached() {
+    main=$(git symbolic-ref --short HEAD)
+    branch feature && commit_file g && commit_file h
+    git checkout -q --detach HEAD~1 && commit_file i
+    assertContains "$(sh "$branch_context" "$main")" '(also on branch feature: 1 of 2 commits)'
+}
+
+test_a_branch_built_on_this_one_is_not_named_as_holding_its_commits() {
+    branch feature && commit_file g
+    branch child && commit_file h
+    git checkout -q feature
+    assertNotContains "$(sh "$branch_context")" 'also on branch'
 }
 
 test_reports_a_rebase_in_progress() {
