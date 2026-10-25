@@ -89,7 +89,7 @@ Without devbox, install shunit2 (`brew install shunit2`, `apt install shunit2`) 
 
 ## Problems
 
-These skills don't report their own problems. If you use [`/ianf-improve-skill`](https://github.com/ianflanagan1/improve-skill), a rule in your global `CLAUDE.md` has Claude log problems with any skill, these included, for it to fix.
+These skills don't report their own problems. If you use [`/ianf-skill-log-problem`](https://github.com/ianflanagan1/skill-authoring), Claude logs problems with any skill, these included, for `/ianf-skill-fix` to fix.
 
 ## Approaches
 
