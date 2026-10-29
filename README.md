@@ -103,7 +103,7 @@ The output names the base and how it was found, with `guessed` for the last.
 
 ## A detached HEAD
 
-Every skill works on commits that are on no branch, as `git commit` and `git reset` do: they move `HEAD` itself, and no branch moves. Each says so in its output, with `git switch -c <name>` to keep the new commits before you switch away from them.
+Every skill works on commits that are on no branch, as `git commit` and `git reset` do: they move `HEAD` itself, and no branch moves. Each says so in its output, with `git switch --create <name>` to keep the new commits before you switch away from them.
 
 On a detached `HEAD` there is no current branch, so the base comes from step 1, 3 or 4 above, never from an upstream. The guess still works: detached partway along a branch with new commits on top, that branch is the nearest, so only the new commits are reworked. A rework that would leave a branch holding the originals of the commits it rewrites (a base named further back, say) is refused, since that branch would keep them; switch to the branch and run there instead.
 

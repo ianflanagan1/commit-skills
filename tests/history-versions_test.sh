@@ -8,7 +8,7 @@
 # (touch -t format).
 checkpoint() {
     abs=$sandbox/repo/$1
-    key=$(printf %s "$abs" | { shasum -a 256 2>/dev/null || sha256sum; } | cut -c1-16)
+    key=$(printf %s "$abs" | { shasum --algorithm 256 2>/dev/null || sha256sum; } | cut -c1-16)
     dir=$HOME/.claude/file-history/session
     mkdir -p "$dir"
     shift
@@ -30,8 +30,8 @@ vscode() {
     printf '{"version":1,"resource":"%s","entries":[{"id":"%s","timestamp":%s000}]}' "$uri" "$id" "$t" >"$dir/entries.json"
 }
 
-soon() { date -d '+1 minute' +%Y%m%d%H%M 2>/dev/null || date -v+1M +%Y%m%d%H%M; }
-later() { date -d '+2 minutes' +%Y%m%d%H%M 2>/dev/null || date -v+2M +%Y%m%d%H%M; }
+soon() { date --date '+1 minute' +%Y%m%d%H%M 2>/dev/null || date -v+1M +%Y%m%d%H%M; }
+later() { date --date '+2 minutes' +%Y%m%d%H%M 2>/dev/null || date -v+2M +%Y%m%d%H%M; }
 
 test_lists_claude_code_checkpoints_with_their_save_time() {
     checkpoint f 1 202901020304 a B1 c
@@ -47,7 +47,7 @@ test_lists_vscode_local_history_with_its_save_time() {
     lines a B2 c >f
     out=$(sh "$history_versions" f 2>&1)
     assertEquals 1 "$(echo "$out" | wc -l | tr -d ' ')"
-    assertContains "$out" "$(date -d @1861920000 '+%Y-%m-%d' 2>/dev/null || date -r 1861920000 '+%Y-%m-%d')"
+    assertContains "$out" "$(date --date @1861920000 '+%Y-%m-%d' 2>/dev/null || date -r 1861920000 '+%Y-%m-%d')"
     assertContains "$out" 'AbCd.txt'
 }
 

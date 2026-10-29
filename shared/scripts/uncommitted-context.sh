@@ -14,7 +14,7 @@
 #
 # Exit status: 0 changes printed, 1 nothing to commit, 2 usage error or not a git work tree.
 
-set -eu
+set -o errexit -o nounset
 
 usage() {
     sed -n '12,13p' "$0" | sed 's/^# \{0,1\}//'
@@ -38,9 +38,9 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo 'Not a git work tr
 [ -n "$(git status --porcelain --untracked-files=all)" ] || { echo 'Nothing to commit' >&2; exit 1; }
 
 echo '## Recent commits'
-if git rev-parse --verify -q HEAD >/dev/null; then
+if git rev-parse --verify --quiet HEAD >/dev/null; then
     base=HEAD
-    git log -n 15 --no-merges --format='%s'
+    git log --max-count 15 --no-merges --format='%s'
 else
     base=$(git hash-object -t tree /dev/null)
     echo '(none: the first commit is still to be made)'
@@ -50,7 +50,7 @@ git_dir=$(git rev-parse --git-dir)
 [ ! -d "$git_dir/rebase-merge" ] && [ ! -d "$git_dir/rebase-apply" ] || echo '(a rebase is in progress)'
 [ ! -f "$git_dir/CHERRY_PICK_HEAD" ] || echo '(a cherry-pick is in progress)'
 [ ! -f "$git_dir/REVERT_HEAD" ] || echo '(a revert is in progress)'
-git symbolic-ref -q HEAD >/dev/null || echo '(detached HEAD: new commits will be on no branch)'
+git symbolic-ref --quiet HEAD >/dev/null || echo '(detached HEAD: new commits will be on no branch)'
 
 echo
 echo '## Status (X = staged, Y = unstaged, ?? = untracked)'
@@ -60,7 +60,7 @@ echo
 echo '## Changes against HEAD, changed lines numbered (lockfiles and minified files omitted)'
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
-{ git diff "$base" --name-only --no-renames; git ls-files --others --exclude-standard; } | sort -u |
+{ git diff "$base" --name-only --no-renames; git ls-files --others --exclude-standard; } | sort --unique |
     while IFS= read -r f; do
         case $f in
             *.lock | *-lock.json | *-lock.yaml | *go.sum | *.min.js | *.min.css | *.map)

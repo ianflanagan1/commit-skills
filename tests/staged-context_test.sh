@@ -47,7 +47,7 @@ test_reports_a_merge_in_progress() {
 }
 
 test_reports_a_detached_head() {
-    git checkout -q --detach
+    git checkout --quiet --detach
     lines a b c d >f && git add f
     assertContains "$(sh "$staged_context")" '(detached HEAD: the commit will be on no branch)'
 }

@@ -50,7 +50,7 @@ test_numbers_match_stage_lines_once_the_index_is_reset() {
     git add f
     lines a B c d >f
     out=$(sh "$uncommitted_context")
-    git reset -q
+    git reset --quiet
     assertContains "$out" "$(sh "$stage_lines" f)"
 }
 
@@ -72,7 +72,7 @@ test_reports_a_rebase_in_progress() {
 }
 
 test_reports_a_detached_head() {
-    git checkout -q --detach
+    git checkout --quiet --detach
     lines x >new
     assertContains "$(sh "$uncommitted_context")" '(detached HEAD: new commits will be on no branch)'
 }

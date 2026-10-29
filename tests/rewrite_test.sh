@@ -9,7 +9,7 @@ rewrite=$root/shared/scripts/rewrite.sh
 # three_commits: on a feature branch, commit A (adds g), B (changes f, adds i) and C (adds h),
 # and set base, A, B and C to their hashes.
 three_commits() {
-    git checkout -qb feature
+    git checkout --quiet -b feature
     lines g1 g2 g3 >g && commit_all 'Add g'
     lines a B c >f && lines i1 >i && commit_all 'Change f'
     lines h1 >h && commit_all 'Add h'
@@ -145,11 +145,11 @@ test_commits_before_the_first_change_keep_their_hashes() {
 }
 
 test_a_replayed_commit_keeps_its_author_date_and_whole_message() {
-    git checkout -qb feature
+    git checkout --quiet -b feature
     lines g1 >g && commit_all 'Add g'
     lines a B c >f && git add f
     GIT_AUTHOR_NAME=other GIT_AUTHOR_EMAIL=other@example.com GIT_AUTHOR_DATE='1600000000 +0200' \
-        git commit -qm 'Change f' -m 'Because of reasons.'
+        git commit --quiet --message 'Change f' --message 'Because of reasons.'
     base=$(git rev-parse HEAD~2) A=$(git rev-parse HEAD~1) B=$(git rev-parse HEAD) C=$B
     lines g1 g2 >g
     p=$(sh "$rewrite" piece - g all)
@@ -240,7 +240,7 @@ test_commits_reorder() {
 
 test_works_on_a_detached_head() {
     three_commits
-    git checkout -q --detach
+    git checkout --quiet --detach
     lines g1 G2 g3 >g
     p=$(sh "$rewrite" piece - g all)
     plan "pick $A" "fixup $p" "pick $B" "pick $C"
@@ -326,8 +326,8 @@ test_a_plain_commit_that_is_not_a_piece_is_invalid() {
 
 test_merge_commits_since_the_base_are_refused() {
     three_commits
-    git checkout -qb side "$A" && lines s1 >s && commit_all side
-    git checkout -q feature && git merge -q --no-edit side
+    git checkout --quiet -b side "$A" && lines s1 >s && commit_all side
+    git checkout --quiet feature && git merge --quiet --no-edit side
     C=$(git rev-parse HEAD)
     plan "pick $A" "pick $B" "pick $C"
     assertEquals 2 "$(exit_status sh "$rewrite" run "$base" "$sandbox/plan")"

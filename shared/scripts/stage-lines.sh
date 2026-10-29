@@ -16,7 +16,7 @@
 #
 # Exit status: 0 listed or staged, 1 no changes, 2 usage error, 3 cannot stage this selection.
 
-set -eu
+set -o errexit -o nounset
 
 usage() {
     sed -n '10,15p' "$0" | sed 's/^# \{0,1\}//'
@@ -55,7 +55,7 @@ esac
 path=$(git rev-parse --show-prefix)$path
 cd "$(git rev-parse --show-toplevel)"
 
-tmp=$(mktemp -d "${TMPDIR:-/tmp}/stage-lines.XXXXXX")
+tmp=$(mktemp --directory "${TMPDIR:-/tmp}/stage-lines.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 
 # Old side: the index entry, or the file at -b base; /dev/null if there is none.
@@ -74,7 +74,7 @@ fi
 new=${from:-$path}
 mode=
 if [ -n "$rev" ]; then
-    git rev-parse -q --verify "$rev^{commit}" >/dev/null || { echo "Not a commit: $rev" >&2; exit 2; }
+    git rev-parse --quiet --verify "$rev^{commit}" >/dev/null || { echo "Not a commit: $rev" >&2; exit 2; }
     new=/dev/null
     if git cat-file -e "$rev:$path" 2>/dev/null; then
         git cat-file blob "$rev:$path" >"$tmp/new"

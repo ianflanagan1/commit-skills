@@ -50,6 +50,6 @@ Start with one line: `✅ Committed.` if every commit was made, or `🛑 Stopped
 - files left uncommitted, and why
 - files you edited to get past a hook, and what you changed (`git reset <start>` doesn't undo these)
 - commits whose check wasn't run, or a failure, the message you tried and the fix you propose
-- a detached `HEAD` (the Gather section says so): `On no branch: git switch -c <name> keeps these commits.`
+- a detached `HEAD` (the Gather section says so): `On no branch: git switch --create <name> keeps these commits.`
 
 Nothing else: no preamble, explanation of the grouping or sign-off.

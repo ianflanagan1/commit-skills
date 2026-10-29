@@ -11,7 +11,7 @@
 #
 # Exit status: 0 versions listed, 1 none found, 2 usage error or not a git work tree.
 
-set -eu
+set -o errexit -o nounset
 
 [ $# -eq 1 ] && [ "$1" != -h ] || { sed -n '10p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo 'Not a git work tree' >&2; exit 2; }
@@ -21,13 +21,13 @@ abs=$top/$rel
 cd "$top"
 
 # GNU forms first: GNU stat -f and date -r succeed with a different meaning.
-mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"; }
-stamp() { date -d "@$1" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -r "$1" '+%Y-%m-%d %H:%M:%S'; }
+mtime() { stat --format %Y "$1" 2>/dev/null || stat -f %m "$1"; }
+stamp() { date --date "@$1" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -r "$1" '+%Y-%m-%d %H:%M:%S'; }
 
 since=$(git log -1 --format=%ct -- "$rel" 2>/dev/null || true)
 since=${since:-0}
 
-tmp=$(mktemp -d "${TMPDIR:-/tmp}/history-versions.XXXXXX")
+tmp=$(mktemp --directory "${TMPDIR:-/tmp}/history-versions.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 head=/dev/null
 if git cat-file -e "HEAD:$rel" 2>/dev/null; then
@@ -39,7 +39,7 @@ fi
 : >"$tmp/cand"
 
 # Claude Code: <session>/<first 16 hex of sha256(absolute path)>@v<n>
-key=$(printf %s "$abs" | { shasum -a 256 2>/dev/null || sha256sum; } | cut -c1-16)
+key=$(printf %s "$abs" | { shasum --algorithm 256 2>/dev/null || sha256sum; } | cut -c1-16)
 for f in "$HOME"/.claude/file-history/*/"$key"@v*; do
     [ -f "$f" ] || continue
     printf '%s\tclaude\t%s\n' "$(mtime "$f")" "$f" >>"$tmp/cand"
@@ -51,7 +51,7 @@ for root in "$HOME/Library/Application Support" "${XDG_CONFIG_HOME:-$HOME/.confi
     for app in Code 'Code - Insiders' VSCodium Cursor; do
         hist=$root/$app/User/History
         [ -d "$hist" ] || continue
-        grep -l -F "\"resource\":\"$uri\"" "$hist"/*/entries.json 2>/dev/null | while IFS= read -r entries; do
+        grep --files-with-matches --fixed-strings "\"resource\":\"$uri\"" "$hist"/*/entries.json 2>/dev/null | while IFS= read -r entries; do
             dir=${entries%/entries.json}
             { tr '{' '\n' <"$entries"; echo; } | sed -n 's/.*"id":"\([^"]*\)".*"timestamp":\([0-9]*\).*/\1 \2/p' |
                 while read -r id ms; do
@@ -61,13 +61,13 @@ for root in "$HOME/Library/Application Support" "${XDG_CONFIG_HOME:-$HOME/.confi
     done
 done
 
-sort -n "$tmp/cand" | while IFS="$(printf '\t')" read -r t src f; do
+sort --numeric-sort "$tmp/cand" | while IFS="$(printf '\t')" read -r t src f; do
     [ "$t" -ge "$since" ] || continue
     sum=$(cksum <"$f")
-    grep -qxF "$sum" "$tmp/seen" 2>/dev/null && continue
+    grep --quiet --line-regexp --fixed-strings "$sum" "$tmp/seen" 2>/dev/null && continue
     echo "$sum" >>"$tmp/seen"
-    cmp -s "$f" "$head" && continue
-    [ -f "$rel" ] && cmp -s "$f" "$rel" && continue
+    cmp --silent "$f" "$head" && continue
+    [ -f "$rel" ] && cmp --silent "$f" "$rel" && continue
     stat=$(git diff --no-index --numstat -- "$head" "$f" | awk '{ printf "+%s -%s", $1, $2 }')
     printf '%s  %-8s %-10s %s\n' "$(stamp "$t")" "$src" "$stat" "$f"
 done >"$tmp/out"

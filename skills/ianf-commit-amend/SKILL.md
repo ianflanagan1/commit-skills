@@ -126,6 +126,6 @@ Start with the line `✅ Amended.` Then one fenced `text` code block holding the
 - commits that were already on a remote: how many, and that publishing needs `git push --force-with-lease`
 - what is left uncommitted, and why
 - commits whose check wasn't run
-- a detached `HEAD`: `On no branch: git switch -c <name> keeps these commits.`
+- a detached `HEAD`: `On no branch: git switch --create <name> keeps these commits.`
 
 Nothing else: no preamble, explanation of the plan or sign-off.

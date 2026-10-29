@@ -24,44 +24,44 @@ base_candidates() {
 # find_base [base]: set base (a full hash) and how (how it was found), or exit 2 with an error.
 find_base() {
     head=$(git rev-parse HEAD)
-    cur=$(git symbolic-ref -q --short HEAD || true)
+    cur=$(git symbolic-ref --quiet --short HEAD || true)
 
     # The default branch: origin's HEAD, else a local main or master.
-    default=$(git symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || true)
+    default=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
     default=${default#origin/}
     if [ -z "$default" ]; then
         for b in main master; do
-            if git show-ref -q --verify "refs/heads/$b"; then default=$b; break; fi
+            if git show-ref --quiet --verify "refs/heads/$b"; then default=$b; break; fi
         done
     fi
 
     # The configured base, and the branch it names, without its remote.
     configured=$(git config commit-skills.base || true)
     own=$configured
-    ! git show-ref -q --verify "refs/remotes/$configured" || own=${configured#*/}
+    ! git show-ref --quiet --verify "refs/remotes/$configured" || own=${configured#*/}
 
     if [ $# -eq 1 ]; then
-        git rev-parse -q --verify "$1^{commit}" >/dev/null || { echo "Not a commit: $1" >&2; exit 2; }
+        git rev-parse --quiet --verify "$1^{commit}" >/dev/null || { echo "Not a commit: $1" >&2; exit 2; }
         base=$(git merge-base HEAD "$1") || { echo "No history in common with $1" >&2; exit 2; }
         how="$1 (given)"
         return
     elif [ -n "$cur" ] && { [ "$cur" = "$default" ] || [ "$cur" = "$own" ]; }; then
-        upstream=$(git rev-parse -q --abbrev-ref '@{upstream}' 2>/dev/null) ||
+        upstream=$(git rev-parse --quiet --abbrev-ref '@{upstream}' 2>/dev/null) ||
             { echo "On $cur with no upstream; pass the base to rework from" >&2; exit 2; }
         base=$(git merge-base HEAD "$upstream")
         how="$upstream (upstream of $cur: unpushed commits only)"
     elif [ -n "$configured" ]; then
-        git rev-parse -q --verify "$configured^{commit}" >/dev/null ||
+        git rev-parse --quiet --verify "$configured^{commit}" >/dev/null ||
             { echo "commit-skills.base is $configured, which is not a commit" >&2; exit 2; }
         base=$(git merge-base HEAD "$configured") || { echo "No history in common with $configured" >&2; exit 2; }
         how="$configured (from git config commit-skills.base)"
     else
-        cand=$(base_candidates | sort -n)
+        cand=$(base_candidates | sort --numeric-sort)
         [ -n "$cand" ] || { echo 'No other branch to find the base from; pass the base to rework from' >&2; exit 2; }
-        n=$(printf '%s\n' "$cand" | head -n 1 | cut -d' ' -f1)
+        n=$(printf '%s\n' "$cand" | head --lines 1 | cut -d' ' -f1)
         near=$(printf '%s\n' "$cand" | awk -v n="$n" '$1 == n')
-        base=$(printf '%s\n' "$near" | head -n 1 | cut -d' ' -f2)
-        if [ "$(printf '%s\n' "$near" | cut -d' ' -f2 | sort -u | wc -l)" -gt 1 ]; then
+        base=$(printf '%s\n' "$near" | head --lines 1 | cut -d' ' -f2)
+        if [ "$(printf '%s\n' "$near" | cut -d' ' -f2 | sort --unique | wc -l)" -gt 1 ]; then
             echo "Several branches are equally near: $(printf '%s\n' "$near" | cut -d' ' -f3 | tr '\n' ' ')" >&2
             echo 'Pass the base to rework from' >&2
             exit 2
@@ -78,7 +78,7 @@ find_base() {
     if [ -z "$unpushed" ]; then
         base=$head
     else
-        base=$(git rev-parse "$(printf '%s\n' "$unpushed" | head -n 1)^")
+        base=$(git rev-parse "$(printf '%s\n' "$unpushed" | head --lines 1)^")
     fi
     how="${how%)}; $pushed pushed commits left as they are)"
 }
@@ -95,7 +95,7 @@ print_warnings() {
         [ ! -f "$git_dir/REVERT_HEAD" ] || echo '(a revert is in progress)'
         total=$(git rev-list --count "$1..HEAD")
         # Detached, a rework moves only HEAD, so any branch holding these commits keeps them.
-        if ! git symbolic-ref -q HEAD >/dev/null; then
+        if ! git symbolic-ref --quiet HEAD >/dev/null; then
             echo '(detached HEAD: the commits are on no branch, and reworking moves only HEAD)'
             git for-each-ref --format='%(refname:short)' refs/heads | while IFS= read -r b; do
                 held=$((total - $(git rev-list --count "$1..HEAD" "^refs/heads/$b")))
@@ -105,7 +105,7 @@ print_warnings() {
         merges=$(git rev-list --count --merges "$1..HEAD")
         [ "$merges" -eq 0 ] || echo "(merge commits: $merges)"
         me=$(git config user.email || true)
-        git log --format=%ae "$1..HEAD" | sort | uniq -c | while read -r count email; do
+        git log --format=%ae "$1..HEAD" | sort | uniq --count | while read -r count email; do
             [ "$email" = "$me" ] || echo "(not yours: $count commits by $email)"
         done
         unpushed=$(git rev-list --count HEAD "^$1" --not --remotes)

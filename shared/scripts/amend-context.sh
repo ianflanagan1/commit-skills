@@ -26,7 +26,7 @@
 # Exit status: 0 printed, 1 no commits since the base, 2 usage error, not a git work tree or no
 # base.
 
-set -eu
+set -o errexit -o nounset
 
 usage() {
     sed -n '9,11p' "$0" | sed 's/^# \{0,1\}//'
@@ -51,13 +51,13 @@ case $max in
 esac
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo 'Not a git work tree' >&2; exit 2; }
-git rev-parse -q --verify HEAD >/dev/null || { echo 'No commits yet; use the commit skill' >&2; exit 2; }
+git rev-parse --quiet --verify HEAD >/dev/null || { echo 'No commits yet; use the commit skill' >&2; exit 2; }
 
 find_base "$@"
 total=$(git rev-list --count "$base..HEAD")
 [ "$total" -gt 0 ] || { echo 'No commits since the base to amend' >&2; exit 1; }
 
-tmp=$(mktemp -d "${TMPDIR:-/tmp}/amend-context.XXXXXX")
+tmp=$(mktemp --directory "${TMPDIR:-/tmp}/amend-context.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 git rev-list "$base..HEAD" >"$tmp/since"
 
@@ -71,7 +71,7 @@ print_warnings "$base"
 
 echo
 echo '## Recent commits before the base'
-git log -n 15 --no-merges --format='%s' "$base"
+git log --max-count 15 --no-merges --format='%s' "$base"
 
 echo
 echo '## Commits since the base, oldest first'
@@ -95,11 +95,11 @@ owners() {
         [ "$l" -lt 1 ] || [ "$l" -gt "$length" ] || set -- "$@" -L "$l,$l"
     done
     [ $# -gt 0 ] || return 0
-    git blame -s -l "$@" HEAD -- "$path" | cut -d' ' -f1 | tr -d '^' | sort -u >"$tmp/blamed"
-    named=$(git rev-list --reverse "$base..HEAD" | grep -Fx -f "$tmp/blamed" |
+    git blame -s -l "$@" HEAD -- "$path" | cut -d' ' -f1 | tr -d '^' | sort --unique >"$tmp/blamed"
+    named=$(git rev-list --reverse "$base..HEAD" | grep --fixed-strings --line-regexp --file "$tmp/blamed" |
         while read -r c; do git rev-parse --short "$c"; done | tr '\n' ' ' | sed 's/ $//')
     before=
-    ! grep -vqFx -f "$tmp/since" "$tmp/blamed" || before=1
+    ! grep --invert-match --quiet --fixed-strings --line-regexp --file "$tmp/since" "$tmp/blamed" || before=1
     if [ -z "$named" ]; then
         echo '      last changed by: only commits before the base'
     elif [ -n "$before" ]; then
@@ -112,7 +112,7 @@ owners() {
 echo
 echo '## Uncommitted changes against HEAD, changed lines numbered (lockfiles and minified files omitted)'
 cd "$(git rev-parse --show-toplevel)"
-{ git diff HEAD --name-only --no-renames; git ls-files --others --exclude-standard; } | sort -u |
+{ git diff HEAD --name-only --no-renames; git ls-files --others --exclude-standard; } | sort --unique |
     while IFS= read -r f; do
         case $f in
             *.lock | *-lock.json | *-lock.yaml | *go.sum | *.min.js | *.min.css | *.map)

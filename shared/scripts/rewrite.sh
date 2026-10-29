@@ -36,7 +36,7 @@
 # Exit status: 0 done, 1 no changes to list, 2 usage error or invalid plan, 3 a conflict, an
 # empty commit or a selection that cannot be made.
 
-set -eu
+set -o errexit -o nounset
 
 usage() {
     sed -n '7,15p' "$0" | sed 's/^# \{0,1\}//'
@@ -51,16 +51,16 @@ die() {
 here=$(cd "$(dirname "$0")" && pwd)
 caller=$PWD
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die 2 'Not a git work tree'
-git rev-parse -q --verify HEAD >/dev/null || die 2 'No commits yet'
+git rev-parse --quiet --verify HEAD >/dev/null || die 2 'No commits yet'
 cd "$(git rev-parse --show-toplevel)"
 
-tmp=$(mktemp -d "${TMPDIR:-/tmp}/rewrite.XXXXXX")
+tmp=$(mktemp --directory "${TMPDIR:-/tmp}/rewrite.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 piece_message='rewrite.sh piece'
 
 # commit_of rev: the full hash of the commit rev names, or exit 2.
 commit_of() {
-    git rev-parse -q --verify "$1^{commit}" || die 2 "Not a commit: $1"
+    git rev-parse --quiet --verify "$1^{commit}" || die 2 "Not a commit: $1"
 }
 
 # tree_of commit: the commit's tree.
@@ -78,7 +78,7 @@ numbered_against() {
     if [ "$1" = - ]; then
         git rev-parse HEAD
     else
-        git rev-parse -q --verify "$1^" || die 2 "$1 has no parent"
+        git rev-parse --quiet --verify "$1^" || die 2 "$1 has no parent"
     fi
 }
 
@@ -172,7 +172,7 @@ cmd_piece() {
         [ "$ids" != all ] || continue
         GIT_INDEX_FILE=$tmp/index.listing
         git read-tree "$parent"
-        count=$(sh "$here/stage-lines.sh" -r "$from" "$path" | grep -c '^ *[0-9][0-9]* [-+]')
+        count=$(sh "$here/stage-lines.sh" -r "$from" "$path" | grep --count '^ *[0-9][0-9]* [-+]')
         GIT_INDEX_FILE=$tmp/index
         rest=$(complement "$count" "$ids")
         [ -z "$rest" ] || sh "$here/stage-lines.sh" -r "$from" "$path" "$rest" >/dev/null
@@ -194,13 +194,13 @@ stop() {
 }
 
 is_original() {
-    grep -qx "$1" "$tmp/originals"
+    grep --quiet --line-regexp "$1" "$tmp/originals"
 }
 
 # is_piece commit: whether the commit is a piece numbered against HEAD or a commit since the base.
 is_piece() {
-    [ "$(git cat-file commit "$1" | sed '1,/^$/d' | head -n 1)" = "$piece_message" ] &&
-        grep -qx "$(git rev-parse -q --verify "$1^" || echo none)" "$tmp/parents"
+    [ "$(git cat-file commit "$1" | sed '1,/^$/d' | head --lines 1)" = "$piece_message" ] &&
+        grep --quiet --line-regexp "$(git rev-parse --quiet --verify "$1^" || echo none)" "$tmp/parents"
 }
 
 # after_of piece: the piece's commit with its lines taken out, if it is a piece of a commit.
@@ -223,7 +223,7 @@ check_plan() {
         [ -n "$arg" ] || bad "$n" "$op needs an argument"
         case $op in
             pick | fixup | remove | drop)
-                arg=$(git rev-parse -q --verify "$arg^{commit}") || bad "$n" "not a commit: $arg"
+                arg=$(git rev-parse --quiet --verify "$arg^{commit}") || bad "$n" "not a commit: $arg"
                 if is_original "$arg"; then
                     [ "$op" != remove ] || bad "$n" 'remove takes a piece; to leave a whole commit out, drop it'
                     echo "$arg" >>"$tmp/seen"
@@ -256,7 +256,7 @@ check_plan() {
     done <"$1"
     [ "$needs" -eq 0 ] || bad "$needs" 'a picked piece needs a message on the next line'
     while read -r c; do
-        count=$(grep -cx "$c" "$tmp/seen" || true)
+        count=$(grep --count --line-regexp "$c" "$tmp/seen" || true)
         [ "$count" -eq 1 ] ||
             die 2 "plan: $(git rev-parse --short "$c") appears $count times; every commit since the base appears once, as pick, fixup or drop"
     done <"$tmp/originals"
@@ -268,9 +268,9 @@ try_merge() {
     status=0
     out=$(git merge-tree --write-tree --name-only --no-messages --merge-base="$1" "$cur" "$2") || status=$?
     case $status in
-        0) printf '%s\n' "$out" | head -n 1 ;;
+        0) printf '%s\n' "$out" | head --lines 1 ;;
         1)
-            printf '%s\n' "$out" | sed '1d; /^$/d' | sort -u | tr '\n' ' ' | sed 's/ $//' >"$tmp/conflict"
+            printf '%s\n' "$out" | sed '1d; /^$/d' | sort --unique | tr '\n' ' ' | sed 's/ $//' >"$tmp/conflict"
             return 1
             ;;
         *) exit 2 ;;

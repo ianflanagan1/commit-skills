@@ -30,7 +30,7 @@ skills_inlining() {
 loading_commands() {
     # shellcheck disable=SC2016
     sed -n 's/^!`\(.*\)`$/\1/p' "$root/skills/$1/SKILL.md" |
-        grep -v '^cat ' |
+        grep --invert-match '^cat ' |
         sed -e "s,\${CLAUDE_SKILL_DIR},/home/u/.claude/skills/$1,g" -e 's/ 2>&1//g' -e 's/; /\
 /g'
 }
@@ -70,7 +70,7 @@ test_atomic_skills_inline_the_atomic_commit_rules() {
 }
 
 test_no_skill_is_allowed_to_run_git_push() {
-    assertEquals '' "$(grep -l '^allowed-tools:.*git push' "$root"/skills/*/SKILL.md)"
+    assertEquals '' "$(grep --files-with-matches '^allowed-tools:.*git push' "$root"/skills/*/SKILL.md)"
 }
 
 test_only_the_rework_skills_may_reset_to_another_commit() {
@@ -113,7 +113,7 @@ test_the_review_ordered_skill_states_its_own_approach() {
 
 test_no_skill_has_more_than_one_approach() {
     for skill in "$root"/skills/*/; do
-        n=$(cat "$skill/SKILL.md" "$skill"/references/*.md | grep -c '^## Approach: ')
+        n=$(cat "$skill/SKILL.md" "$skill"/references/*.md | grep --count '^## Approach: ')
         assertTrue "$(basename "$skill") has $n approaches" "[ $n -le 1 ]"
     done
 }

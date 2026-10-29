@@ -12,7 +12,7 @@
 #
 # Exit status: 0 staged changes printed, 1 nothing staged, 2 usage error or not a git work tree.
 
-set -eu
+set -o errexit -o nounset
 
 usage() {
     sed -n '10,11p' "$0" | sed 's/^# \{0,1\}//'
@@ -36,22 +36,22 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo 'Not a git work tr
 git diff --cached --quiet && { echo 'Nothing staged' >&2; exit 1; }
 
 echo '## Recent commits'
-if git rev-parse --verify -q HEAD >/dev/null; then
-    git log -n 15 --no-merges --format='%s'
+if git rev-parse --verify --quiet HEAD >/dev/null; then
+    git log --max-count 15 --no-merges --format='%s'
 else
     echo '(none: this will be the first commit)'
 fi
 git_dir=$(git rev-parse --git-dir)
 [ ! -f "$git_dir/MERGE_HEAD" ] || echo '(a merge is in progress)'
-git symbolic-ref -q HEAD >/dev/null || echo '(detached HEAD: the commit will be on no branch)'
+git symbolic-ref --quiet HEAD >/dev/null || echo '(detached HEAD: the commit will be on no branch)'
 
 echo
 echo '## Staged files'
-git diff --cached --no-color -M --stat=200 --summary
+git diff --cached --no-color --find-renames --stat=200 --summary
 
 echo
 echo '## Staged diff (lockfiles and minified files omitted)'
-git diff --cached --no-color --no-ext-diff -M -- . \
+git diff --cached --no-color --no-ext-diff --find-renames -- . \
     ':(exclude)*.lock' ':(exclude)*-lock.json' ':(exclude)*-lock.yaml' ':(exclude)*go.sum' \
     ':(exclude)*.min.js' ':(exclude)*.min.css' ':(exclude)*.map' \
     | awk -v max="$max" '

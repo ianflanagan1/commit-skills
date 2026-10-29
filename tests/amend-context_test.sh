@@ -9,7 +9,7 @@ rewrite=$root/shared/scripts/rewrite.sh
 
 # two_commits: on a feature branch, commit A (adds g) and B (changes f's second line).
 two_commits() {
-    git checkout -qb feature
+    git checkout --quiet -b feature
     lines g1 g2 g3 >g && commit_all 'Add g'
     lines a B c >f && commit_all 'Change f'
     A=$(git rev-parse --short HEAD~1) B=$(git rev-parse --short HEAD)
@@ -21,7 +21,7 @@ owners_after() {
 }
 
 test_no_commits_since_the_base_exits_1() {
-    git checkout -qb feature
+    git checkout --quiet -b feature
     lines x >new
     assertEquals 1 "$(exit_status sh "$amend_context")"
 }
@@ -51,7 +51,7 @@ test_a_clean_branch_still_shows_its_commits() {
 
 test_warns_of_a_detached_head_and_the_branch_that_also_holds_the_commits() {
     two_commits
-    git checkout -q --detach
+    git checkout --quiet --detach
     lines x >>g && commit_all 'Change g'
     out=$(sh "$amend_context" "$(git rev-parse HEAD~3)")
     assertContains "$out" '(detached HEAD: the commits are on no branch, and reworking moves only HEAD)'

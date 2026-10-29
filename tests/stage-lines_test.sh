@@ -31,7 +31,7 @@ test_listing_counts_from_the_index_so_numbers_restart_after_staging() {
 test_listing_against_a_base_commit_ignores_the_index() {
     edit_f
     git add f
-    assertEquals 3 "$(sh "$stage_lines" -b HEAD f | grep -c '^ *[0-9]')"
+    assertEquals 3 "$(sh "$stage_lines" -b HEAD f | grep --count '^ *[0-9]')"
 }
 
 test_a_file_without_changes_exits_1() {
@@ -70,7 +70,7 @@ test_an_unselected_removed_line_is_kept() {
 
 test_ids_may_be_ranges_lists_or_all() {
     for case in '1-3|a B2 c d' '2 3|a b B2 c d' '1,3|a c d' 'all|a B2 c d'; do
-        git reset -q
+        git reset --quiet
         edit_f
         # shellcheck disable=SC2086
         sh "$stage_lines" f ${case%%|*} >/dev/null
@@ -155,7 +155,7 @@ test_the_index_keeps_the_file_mode() {
     commit_all x
     lines a b c >x.sh
     sh "$stage_lines" x.sh 1 >/dev/null
-    assertEquals 100755 "$(git ls-files -s x.sh | cut -c1-6)"
+    assertEquals 100755 "$(git ls-files --stage x.sh | cut -c1-6)"
 }
 
 test_a_mode_change_alone_is_not_listed_as_a_line() {
@@ -223,16 +223,16 @@ test_a_version_from_a_commit_can_be_staged() {
     lines a B1 c >f && commit_all one
     one=$(git rev-parse HEAD)
     lines a B2 c >f && commit_all two
-    git reset -q HEAD~2
+    git reset --quiet HEAD~2
     sh "$stage_lines" -r "$one" f all >/dev/null
     assertEquals 'a B1 c' "$(in_index f)"
     assertEquals 'a B2 c' "$(tr '\n' ' ' <f | sed 's/ $//')"
 }
 
 test_a_file_missing_from_the_commit_is_staged_as_a_deletion() {
-    git rm -q f && commit_all gone
+    git rm --quiet f && commit_all gone
     gone=$(git rev-parse HEAD)
-    git reset -q HEAD~1
+    git reset --quiet HEAD~1
     sh "$stage_lines" -r "$gone" f all >/dev/null
     assertEquals '' "$(git ls-files f)"
 }
@@ -240,9 +240,9 @@ test_a_file_missing_from_the_commit_is_staged_as_a_deletion() {
 test_a_new_file_from_a_commit_keeps_its_executable_mode() {
     lines a >x.sh && chmod 755 x.sh && commit_all x
     x=$(git rev-parse HEAD)
-    git reset -q HEAD~1
+    git reset --quiet HEAD~1
     sh "$stage_lines" -r "$x" x.sh all >/dev/null
-    assertEquals 100755 "$(git ls-files -s x.sh | cut -c1-6)"
+    assertEquals 100755 "$(git ls-files --stage x.sh | cut -c1-6)"
 }
 
 test_a_rev_that_is_not_a_commit_exits_2() {

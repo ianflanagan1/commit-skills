@@ -3,7 +3,7 @@
 Make each commit in its own Bash call, passing the message on stdin with a quoted heredoc so nothing in it is expanded:
 
 ```sh
-git commit --quiet -F - <<'EOF'
+git commit --quiet --file - <<'EOF'
 <message>
 EOF
 git log -1 --format='%h %s'

@@ -7,7 +7,7 @@
   "shell": {
     "scripts": {
       "test": "sh tests/run.sh",
-      "lint": "shellcheck -x -s sh $(find shared skills tests -name '*.sh' -type f)"
+      "lint": "shellcheck --external-sources --shell sh $(find shared skills tests -name '*.sh' -type f)"
     }
   }
 }

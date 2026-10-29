@@ -23,7 +23,7 @@
 #
 # Exit status: 0 printed, 1 nothing to rework, 2 usage error, not a git work tree or no base.
 
-set -eu
+set -o errexit -o nounset
 
 usage() {
     sed -n '8,10p' "$0" | sed 's/^# \{0,1\}//'
@@ -48,7 +48,7 @@ case $max in
 esac
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo 'Not a git work tree' >&2; exit 2; }
-git rev-parse -q --verify HEAD >/dev/null || { echo 'No commits yet; use the commit skill' >&2; exit 2; }
+git rev-parse --quiet --verify HEAD >/dev/null || { echo 'No commits yet; use the commit skill' >&2; exit 2; }
 
 find_base "$@"
 dirty=$(git status --porcelain --untracked-files=all)
@@ -65,7 +65,7 @@ print_warnings "$base"
 
 echo
 echo '## Recent commits before the base'
-git log -n 15 --no-merges --format='%s' "$base"
+git log --max-count 15 --no-merges --format='%s' "$base"
 
 echo
 echo '## Commits since the base, oldest first'
@@ -82,7 +82,7 @@ if [ -n "$dirty" ]; then git status --short --untracked-files=all; else echo '(c
 echo
 echo '## Changes since the base, changed lines numbered (lockfiles and minified files omitted)'
 cd "$(git rev-parse --show-toplevel)"
-{ git diff "$base" --name-only --no-renames; git ls-files --others --exclude-standard; } | sort -u |
+{ git diff "$base" --name-only --no-renames; git ls-files --others --exclude-standard; } | sort --unique |
     while IFS= read -r f; do
         case $f in
             *.lock | *-lock.json | *-lock.yaml | *go.sum | *.min.js | *.min.css | *.map)

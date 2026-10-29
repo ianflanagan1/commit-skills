@@ -61,6 +61,6 @@ Start with one line: `✅ Reworked.` if every commit was made, or `🛑 Stopped.
 - files left uncommitted, and why
 - files you edited to get past a hook, and what you changed (`git reset <start>` doesn't undo these)
 - a failure, the message you tried and the fix you propose
-- a detached `HEAD`: `On no branch: git switch -c <name> keeps these commits.`
+- a detached `HEAD`: `On no branch: git switch --create <name> keeps these commits.`
 
 If every commit was made, end with a line `Squash message:` and the message in one fenced `text` code block. Nothing else: no preamble, explanation of the grouping or sign-off.

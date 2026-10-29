@@ -12,7 +12,7 @@ staged_context=$root/shared/scripts/staged-context.sh
 branch_context=$root/shared/scripts/branch-context.sh
 
 setUp() {
-    sandbox=$(mktemp -d "${SHUNIT_TMPDIR:-${TMPDIR:-/tmp}}/test.XXXXXX")
+    sandbox=$(mktemp --directory "${SHUNIT_TMPDIR:-${TMPDIR:-/tmp}}/test.XXXXXX")
     sandbox=$(cd "$sandbox" && pwd -P)
     HOME=$sandbox/home
     XDG_CONFIG_HOME=$HOME/.config
@@ -29,13 +29,13 @@ tearDown() {
 }
 
 new_repo() {
-    git init -q .
+    git init --quiet .
     git config user.name test
     git config user.email test@example.com
     git config commit.gpgsign false
 }
 
-commit_all() { git add -A && git commit -qm "$1"; }
+commit_all() { git add --all && git commit --quiet --message "$1"; }
 
 # lines a b c: print each argument on its own line.
 lines() { printf '%s\n' "$@"; }
