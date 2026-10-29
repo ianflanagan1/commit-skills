@@ -3,6 +3,7 @@
 #
 # Prints, in order:
 #   - recent commit subjects, so messages can match the repository's style
+#   - the starting commit, which undoes the run (none before the first commit)
 #   - any merge, rebase, cherry-pick or revert in progress, and a detached HEAD
 #   - the status of every changed and untracked file
 #   - the diff of every changed and untracked file against HEAD, with changed lines numbered
@@ -17,7 +18,7 @@
 set -o errexit -o nounset
 
 usage() {
-    sed -n '12,13p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '13,14p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 max=3000
@@ -51,6 +52,10 @@ git_dir=$(git rev-parse --git-dir)
 [ ! -f "$git_dir/CHERRY_PICK_HEAD" ] || echo '(a cherry-pick is in progress)'
 [ ! -f "$git_dir/REVERT_HEAD" ] || echo '(a revert is in progress)'
 git symbolic-ref --quiet HEAD >/dev/null || echo '(detached HEAD: new commits will be on no branch)'
+
+echo
+echo '## Starting commit'
+git rev-parse --quiet --verify --short HEAD || echo none
 
 echo
 echo '## Status (X = staged, Y = unstaged, ?? = untracked)'

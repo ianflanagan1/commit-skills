@@ -24,6 +24,12 @@ test_shows_recent_commit_subjects() {
 init"
 }
 
+test_shows_the_starting_commit() {
+    lines x >new
+    assertContains "$(sh "$uncommitted_context")" "## Starting commit
+$(git rev-parse --short HEAD)"
+}
+
 test_shows_staged_and_unstaged_changes_together_against_head() {
     lines a B c >f
     git add f
@@ -86,6 +92,8 @@ test_works_before_the_first_commit() {
     rm -rf .git && new_repo
     out=$(sh "$uncommitted_context")
     assertContains "$out" '(none: the first commit is still to be made)'
+    assertContains "$out" "## Starting commit
+none"
     assertContains "$out" '    1 +a'
 }
 

@@ -30,7 +30,7 @@ If the block above still shows the command rather than its output, run `sh <dire
 
 ## Start
 
-Don't rewrite commits that existed before this run. Before staging anything, record the starting commit for the output: `git rev-parse --short HEAD` (none if the repo has no commits yet). Because the working tree is never touched, `git reset <start>` undoes the whole run.
+Don't rewrite commits that existed before this run. The Gather section's starting commit is `<start>` in the output (`none` if the repo has no commits yet). Because the working tree is never touched, `git reset <start>` undoes the whole run.
 
 If the repo has no commits yet, make one commit of everything except what is left out (see Working tree), and skip Plan and Check.
 
