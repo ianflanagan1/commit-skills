@@ -149,9 +149,10 @@ test_every_skill_runs_in_the_commit_worker_and_is_waited_for() {
     done
 }
 
-test_every_skill_names_its_model() {
+test_every_skill_names_its_model_and_effort() {
     for skill in "$root"/skills/*/; do
         grep --quiet '^model: [a-z]' "$skill/SKILL.md" || fail "$(basename "$skill") names no model"
+        grep --quiet '^effort: [a-z]' "$skill/SKILL.md" || fail "$(basename "$skill") names no effort"
     done
 }
 

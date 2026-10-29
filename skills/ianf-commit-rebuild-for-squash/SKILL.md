@@ -3,6 +3,7 @@ name: ianf-commit-rebuild-for-squash
 description: Rework the commits since the base and any uncommitted work into commits ordered for easy review, for a branch that will be squash-merged, with a message for each and a suggested squash message. Prints only the new commits and the squash message.
 disable-model-invocation: true
 model: opus
+effort: medium
 context: fork
 agent: ianf-commit-worker
 background: false

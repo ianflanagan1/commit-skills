@@ -177,7 +177,7 @@ mkdir -p ~/.claude/agents
 ln -s ~/projects/claude/commit-skills/agents/ianf-commit-worker.md ~/.claude/agents/
 ```
 
-Each skill runs as a subagent, `ianf-commit-worker` (`context: fork` in its frontmatter), so it starts without your conversation's history and only its output comes back. The agent has only the file and Bash tools, so each turn carries no other tool definitions. The skills wait for it (`background: false`), as a script calling `claude --print` needs. Each skill names its model: Haiku at low effort for `/ianf-commit-message` and `/ianf-commit-staged`, Sonnet at medium effort for `/ianf-commit`, and Opus for amending and rebuilding, where the planning is hardest.
+Each skill runs as a subagent, `ianf-commit-worker` (`context: fork` in its frontmatter), so it starts without your conversation's history and only its output comes back. The agent has only the file and Bash tools, so each turn carries no other tool definitions. The skills wait for it (`background: false`), as a script calling `claude --print` needs. Each skill names its model: Haiku at low effort for `/ianf-commit-message` and `/ianf-commit-staged`, Sonnet at medium effort for `/ianf-commit`, and Opus at medium effort, Claude Code's own default for it, for amending and rebuilding, where the planning is hardest.
 
 Each is invoked by its folder's name, such as `/ianf-commit`. The `ianf-` prefix keeps them from colliding with other skills of the same name.
 

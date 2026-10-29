@@ -3,6 +3,7 @@ name: ianf-commit-amend
 description: Fold uncommitted work into the unpushed commits it belongs to, or make the changes the user asks for to those commits (reword, insert, move lines, split, squash, reorder, drop), leaving every other commit as it was. Prints only the resulting commits' hashes and subjects.
 disable-model-invocation: true
 model: opus
+effort: medium
 context: fork
 agent: ianf-commit-worker
 background: false
