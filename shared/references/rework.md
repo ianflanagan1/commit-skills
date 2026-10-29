@@ -9,15 +9,15 @@ The commits since the base, on a branch or a detached `HEAD`, and any uncommitte
 - If the commits already fit the approach and there is no uncommitted work, reply `➖ Already well organised.` and stop. Make no changes.
 - Plan the whole new series before changing anything. Uncommitted work can join the commit it belongs with (a fix to it, say) or become commits of its own.
 
-Record the starting commit for the output, `git rev-parse --short HEAD`, then reset to the base:
+Record the starting commit for the output, which the first command prints, and reset to the base, in one Bash call:
 
 ```sh
-git reset --quiet <base>
+git rev-parse --short HEAD && git reset --quiet <base>
 ```
 
 This moves the branch (or, detached, just `HEAD`) and the index back to the base and leaves the working tree, which already holds the final state, as it is. If the first commits since the base stay exactly as they are, reset to the last of them instead, so they keep their hashes. The numbers in the Gather section count from the base, so they match the index after resetting to it; after resetting anywhere else, list a file again before using its numbers. `git reset <start>` undoes the whole run, leaving any uncommitted work unstaged.
 
-A file the Warnings list as ignored but committed must be staged with `git add -f`, or it is dropped.
+A file the Warnings list as ignored but committed must be staged with `git add --force`, or it is dropped.
 
 To stage a file as it was in one of the original commits, before a later commit changed it again (`<scripts>` is the `scripts` directory next to SKILL.md):
 
