@@ -140,6 +140,17 @@ EOF
     done
 }
 
+test_every_script_a_skill_tells_claude_to_run_is_in_the_skill() {
+    for skill in "$root"/skills/*/; do
+        while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            assertTrue "$(basename "$skill")/scripts/$f" "[ -f '$skill/scripts/$f' ]"
+        done <<EOF
+$(cat "$skill/SKILL.md" "$skill"/references/*.md | grep --only-matching '<scripts>/[a-z-]*\.sh' | sed 's,<scripts>/,,' | sort --unique)
+EOF
+    done
+}
+
 test_every_link_points_into_shared() {
     while IFS= read -r link; do
         case $(readlink "$link") in

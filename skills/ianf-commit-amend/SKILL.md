@@ -2,7 +2,7 @@
 name: ianf-commit-amend
 description: Fold uncommitted work into the unpushed commits it belongs to, or make the changes the user asks for to those commits (reword, insert, move lines, split, squash, reorder, drop), leaving every other commit as it was. Prints only the resulting commits' hashes and subjects.
 disable-model-invocation: true
-allowed-tools: Bash(sh *scripts/amend-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/rewrite.sh*), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*), Bash(git worktree:*)
+allowed-tools: Bash(sh *scripts/amend-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/rewrite.sh*), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*)
 ---
 
 # Amend
@@ -96,13 +96,13 @@ It builds the new commits in memory and changes nothing: not the branch, index o
 Commits the script builds don't run commit hooks, just as with `git rebase`, so this check stands in for them. For each `new` commit:
 
 - Read it with `git show <hash>`: it holds one reason to change, every name it uses is defined in it or before it, and nothing refers to a later commit.
-- If the repo has a quick build, type-check or test command (from `CLAUDE.md`, `package.json` scripts, a `Makefile` or similar) and it runs without network access or installed dependencies the checkout lacks, run it on the commit in a throwaway worktree in your scratchpad directory:
+- If the repo has a quick build, type-check or test command (from `CLAUDE.md`, `package.json` scripts, a `Makefile` or similar) and it runs without network access or installed dependencies the checkout lacks, run it on the commit in its own Bash call:
 
   ```sh
-  git worktree add --quiet --detach <scratch dir> <hash>
-  (cd <scratch dir> && <command>)
-  git worktree remove --force <scratch dir>
+  sh <scripts>/check-commit.sh <hash> '<command>'
   ```
+
+  It runs the command in a throwaway worktree holding just the commit, removes the worktree, and prints one line on a pass or the end of the command's output on a failure.
 
   Skip it if it is slow, needs services or would change anything outside the worktree, and say in the output which commits weren't checked.
 

@@ -2,7 +2,7 @@
 name: ianf-commit
 description: Split all uncommitted work into atomic commits that each leave the project working, write a message for each in the repository's style, and commit them. Prints only the new commits' hashes and subjects.
 disable-model-invocation: true
-allowed-tools: Bash(sh *scripts/uncommitted-context.sh*), Bash(echo "exit $?"), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset --quiet), Bash(git reset --soft HEAD~1), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git commit:*), Bash(git worktree:*)
+allowed-tools: Bash(sh *scripts/uncommitted-context.sh*), Bash(echo "exit $?"), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset --quiet), Bash(git reset --soft HEAD~1), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git commit:*)
 ---
 
 # Commit

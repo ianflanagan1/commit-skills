@@ -161,6 +161,8 @@ sh shared/scripts/branch-context.sh [base]     # the branch since its base, line
 
 Each takes `-n <lines>` to truncate the diff after that many lines (default 2000 for `staged-context.sh`, 3000 for the others). Lockfiles and minified files are listed but left out of the diff. They exit with 0 when they print changes, 1 when there is nothing to commit, amend or rework, and 2 on a usage error or outside a git work tree (`amend-context.sh` and `branch-context.sh` also when they find no base). Those two find the base with `branch-base.sh`, which they source.
 
+`check-commit.sh <rev> '<command>'` runs a command on one commit in a throwaway worktree, then removes the worktree. It prints one line on a pass and the end of the command's output on a failure, and exits 1 on a failure. The skills that check each commit run it once per commit.
+
 `rewrite.sh` needs git 2.40 or later, for `git merge-tree --merge-base`.
 
 ## Claude Code

@@ -10,6 +10,7 @@ uncommitted_context=$root/shared/scripts/uncommitted-context.sh
 history_versions=$root/shared/scripts/history-versions.sh
 staged_context=$root/shared/scripts/staged-context.sh
 branch_context=$root/shared/scripts/branch-context.sh
+check_commit=$root/shared/scripts/check-commit.sh
 
 setUp() {
     sandbox=$(mktemp --directory "${SHUNIT_TMPDIR:-${TMPDIR:-/tmp}}/test.XXXXXX")
