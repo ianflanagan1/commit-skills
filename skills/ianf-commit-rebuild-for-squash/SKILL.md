@@ -2,6 +2,10 @@
 name: ianf-commit-rebuild-for-squash
 description: Rework the commits since the base and any uncommitted work into commits ordered for easy review, for a branch that will be squash-merged, with a message for each and a suggested squash message. Prints only the new commits and the squash message.
 disable-model-invocation: true
+model: opus
+context: fork
+agent: ianf-commit-worker
+background: false
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*)
 ---
 

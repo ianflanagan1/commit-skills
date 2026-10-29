@@ -140,6 +140,21 @@ EOF
     done
 }
 
+test_every_skill_runs_in_the_commit_worker_and_is_waited_for() {
+    assertTrue 'agents/ianf-commit-worker.md' "[ -f '$root/agents/ianf-commit-worker.md' ]"
+    for skill in "$root"/skills/*/; do
+        for field in 'context: fork' 'agent: ianf-commit-worker' 'background: false'; do
+            grep --quiet --line-regexp "$field" "$skill/SKILL.md" || fail "$(basename "$skill") lacks: $field"
+        done
+    done
+}
+
+test_every_skill_names_its_model() {
+    for skill in "$root"/skills/*/; do
+        grep --quiet '^model: [a-z]' "$skill/SKILL.md" || fail "$(basename "$skill") names no model"
+    done
+}
+
 test_every_script_a_skill_tells_claude_to_run_is_in_the_skill() {
     for skill in "$root"/skills/*/; do
         while IFS= read -r f; do

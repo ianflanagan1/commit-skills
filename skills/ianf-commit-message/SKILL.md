@@ -2,6 +2,11 @@
 name: ianf-commit-message
 description: Suggest a commit message for the currently staged changes, matching the repository's existing style. Prints only the message.
 disable-model-invocation: true
+model: haiku
+effort: low
+context: fork
+agent: ianf-commit-worker
+background: false
 allowed-tools: Bash(sh *scripts/staged-context.sh*), Bash(echo "exit $?")
 ---
 

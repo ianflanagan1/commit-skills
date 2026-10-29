@@ -2,6 +2,10 @@
 name: ianf-commit-amend
 description: Fold uncommitted work into the unpushed commits it belongs to, or make the changes the user asks for to those commits (reword, insert, move lines, split, squash, reorder, drop), leaving every other commit as it was. Prints only the resulting commits' hashes and subjects.
 disable-model-invocation: true
+model: opus
+context: fork
+agent: ianf-commit-worker
+background: false
 allowed-tools: Bash(sh *scripts/amend-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/rewrite.sh*), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*)
 ---
 
