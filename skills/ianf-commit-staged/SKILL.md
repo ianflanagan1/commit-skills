@@ -7,14 +7,14 @@ effort: low
 context: fork
 agent: ianf-commit-worker
 background: false
-allowed-tools: Bash(sh *scripts/staged-context.sh*), Bash(echo "exit $?"), Bash(git diff:*), Bash(git commit:*), Bash(git log:*)
+allowed-tools: Bash(sh *scripts/reference.sh*), Bash(sh *scripts/staged-context.sh*), Bash(echo "exit $?"), Bash(git diff:*), Bash(git commit:*), Bash(git log:*)
 ---
 
 # Commit staged
 
 Commit what is staged **now**, with one message written for exactly that: not for unstaged edits, earlier conversation or what you meant to change.
 
-If a `cat` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
+If a `reference.sh` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
 
 ## Gather
 
@@ -33,9 +33,9 @@ If the block above still shows the command rather than its output, run `sh <dire
 - `(a merge is in progress)`: reply `🚧 Merge in progress; not committing.` and stop.
 - Truncated diff: run `git diff --cached -- <path>` for files you need to understand. Don't read unstaged or unrelated files.
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-message-guide.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-message-guide.md`
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-safety.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-safety.md`
 
 Commit only the index: don't stage, unstage or stash anything.
 

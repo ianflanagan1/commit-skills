@@ -7,14 +7,14 @@ effort: medium
 context: fork
 agent: ianf-commit-worker
 background: false
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*)
+allowed-tools: Bash(sh *scripts/reference.sh*), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset:*), Bash(sh *scripts/branch-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git merge-base:*), Bash(git commit:*)
 ---
 
 # Rebuild for squash
 
 Rework everything since the base, committed or not, into a series of commits a reviewer can read one at a time.
 
-If a `cat` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
+If a `reference.sh` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
 
 ## Gather
 
@@ -45,15 +45,15 @@ The branch will be squash-merged, so its commits are lost on merge and exist onl
 4. Order mechanical commits first, so the reviewer can skim them, then refactors that prepare the way, then behaviour changes in the order a reader needs them.
 5. If the work is one small coherent change, make one commit.
 
-!`cat "${CLAUDE_SKILL_DIR}/references/rework.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" rework.md`
 
-!`cat "${CLAUDE_SKILL_DIR}/references/staging.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" staging.md`
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-safety.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-safety.md`
 
 Write each commit's message for that commit's staged diff alone, for the reviewer, by this guide:
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-message-guide.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-message-guide.md`
 
 ## Squash message
 

@@ -7,14 +7,14 @@ effort: medium
 context: fork
 agent: ianf-commit-worker
 background: false
-allowed-tools: Bash(sh *scripts/amend-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/rewrite.sh*), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*)
+allowed-tools: Bash(sh *scripts/reference.sh*), Bash(sh *scripts/amend-context.sh*), Bash(echo "exit $?"), Bash(sh *scripts/rewrite.sh*), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*)
 ---
 
 # Amend
 
 Change the commits since the base, on a branch or a detached `HEAD`, as little as the work needs: fold uncommitted work into the commits it belongs to, or make the changes the user's note asks for. Commits the plan doesn't touch keep their content, message and author, and those before the first change keep their hashes.
 
-If a `cat` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
+If a `reference.sh` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
 
 ## Gather
 
@@ -123,7 +123,7 @@ This moves `HEAD` and the index to the new commits, and refuses if `HEAD` has mo
 
 Write each new or changed message for that commit's whole diff, by this guide:
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-message-guide.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-message-guide.md`
 
 ## Output
 

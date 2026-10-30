@@ -7,14 +7,14 @@ effort: medium
 context: fork
 agent: ianf-commit-worker
 background: false
-allowed-tools: Bash(sh *scripts/uncommitted-context.sh*), Bash(echo "exit $?"), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset --quiet), Bash(git reset --soft HEAD~1), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git commit:*)
+allowed-tools: Bash(sh *scripts/reference.sh*), Bash(sh *scripts/uncommitted-context.sh*), Bash(echo "exit $?"), Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git add:*), Bash(git rm --cached:*), Bash(git reset --quiet), Bash(git reset --soft HEAD~1), Bash(sh *scripts/stage-lines.sh*), Bash(sh *scripts/history-versions.sh*), Bash(git ls-files:*), Bash(git rev-parse:*), Bash(git commit:*)
 ---
 
 # Commit
 
 Turn everything uncommitted (staged, unstaged and untracked) into a series of atomic commits, oldest idea first.
 
-If a `cat` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
+If a `reference.sh` command below still shows instead of a file's contents, read that file in `references/` next to this file before going on.
 
 ## Gather
 
@@ -39,15 +39,15 @@ Don't rewrite commits that existed before this run. The Gather section's startin
 
 If the repo has no commits yet, make one commit of everything except what is left out (see Working tree), and skip Plan and Check.
 
-!`cat "${CLAUDE_SKILL_DIR}/references/atomic-commits.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" atomic-commits.md`
 
-!`cat "${CLAUDE_SKILL_DIR}/references/staging.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" staging.md`
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-safety.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-safety.md`
 
 Write each commit's message for that commit's staged diff alone, by this guide:
 
-!`cat "${CLAUDE_SKILL_DIR}/references/commit-message-guide.md"`
+!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" commit-message-guide.md`
 
 ## Output
 

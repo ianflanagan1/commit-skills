@@ -165,6 +165,8 @@ Each takes `-n <lines>` to truncate the diff after that many lines (default 2000
 
 `rewrite.sh` needs git 2.40 or later, for `git merge-tree --merge-base`.
 
+`reference.sh <name>` prints one of the skill's `references/` files, which is how each `SKILL.md` inlines them as it loads. Claude Code blocks a load-time `cat` of a file outside the session's working directories, whatever the skill's `allowed-tools` say, and a linked skill's references resolve into this repository; a script the skill's `allowed-tools` permit isn't blocked.
+
 ## Claude Code
 
 Clone to `~/projects/claude/commit-skills`, then link each skill into your skills folder, and the agent they run in into your agents folder:

@@ -13,7 +13,7 @@
 # inlined skill: the references the skill's SKILL.md inlines, sorted, space-separated.
 inlined() {
     # shellcheck disable=SC2016
-    sed -n 's,^!`cat "${CLAUDE_SKILL_DIR}/references/\([^"]*\)"`$,\1,p' "$root/skills/$1/SKILL.md" |
+    sed -n 's,^!`sh "${CLAUDE_SKILL_DIR}/scripts/reference.sh" \([a-z.-]*\)`$,\1,p' "$root/skills/$1/SKILL.md" |
         sort | tr '\n' ' ' | sed 's/ $//'
 }
 
@@ -25,12 +25,11 @@ skills_inlining() {
     done | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//'
 }
 
-# loading_commands skill: the commands the skill's SKILL.md runs as it loads, other than cat (which
-# needs no rule), one per line, split at "; ", without "2>&1" and with CLAUDE_SKILL_DIR filled in.
+# loading_commands skill: the commands the skill's SKILL.md runs as it loads, one per line, split
+# at "; ", without "2>&1" and with CLAUDE_SKILL_DIR filled in.
 loading_commands() {
     # shellcheck disable=SC2016
     sed -n 's/^!`\(.*\)`$/\1/p' "$root/skills/$1/SKILL.md" |
-        grep --invert-match '^cat ' |
         sed -e "s,\${CLAUDE_SKILL_DIR},/home/u/.claude/skills/$1,g" -e 's/ 2>&1//g' -e 's/; /\
 /g'
 }
@@ -121,9 +120,11 @@ test_no_skill_has_more_than_one_approach() {
 test_every_inlined_reference_and_script_exists_in_the_skill() {
     for skill in "$root"/skills/*/; do
         while IFS= read -r f; do
+            [ -n "$f" ] || continue
             assertTrue "$(basename "$skill")/$f" "[ -f '$skill/$f' ]"
         done <<EOF
 $(sed -n 's,.*CLAUDE_SKILL_DIR}/\([a-z]*/[a-z.-]*\).*,\1,p' "$skill/SKILL.md")
+$(inlined "$(basename "$skill")" | tr ' ' '\n' | sed '/./s,^,references/,')
 EOF
     done
 }
@@ -134,6 +135,24 @@ test_every_command_a_skill_runs_as_it_loads_is_in_its_allowed_tools() {
         while IFS= read -r command; do
             [ -n "$command" ] || continue
             allows "$skill" "$command" || fail "$skill does not allow: $command"
+        done <<EOF
+$(loading_commands "$skill")
+EOF
+    done
+}
+
+# Claude Code blocks a load-time command that reads a file outside the session's working
+# directories, whatever allowed-tools says, and a linked skill's files resolve into this repository.
+# A skill's own script, run with sh and allowed by a rule, isn't blocked.
+test_every_command_a_skill_runs_as_it_loads_is_one_of_its_own_scripts() {
+    for skill in "$root"/skills/*/; do
+        skill=$(basename "$skill")
+        while IFS= read -r command; do
+            case $command in
+                '' | 'echo "exit $?"') ;;
+                "sh \"/home/u/.claude/skills/$skill/scripts/"*) ;;
+                *) fail "$skill runs as it loads: $command" ;;
+            esac
         done <<EOF
 $(loading_commands "$skill")
 EOF
