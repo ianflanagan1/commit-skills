@@ -1,5 +1,5 @@
 #!/bin/sh
-# Structure of skills/: the shared files each skill inlines and links. Run with tests/run.sh.
+# Structure of skills/: the shared files each skill inlines and links. Run with `devbox run -- task test`.
 #
 # The shared references a skill inlines fix its approach to splitting work into commits:
 #   agnostic        the user chose what goes in the commit   ianf-commit-message, ianf-commit-staged

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Behaviour of shared/scripts/check-commit.sh. Run with tests/run.sh.
+# Behaviour of shared/scripts/check-commit.sh. Run with `devbox run -- task test`.
 
 # shellcheck source=tests/helpers.sh
 . "$(dirname "$0")/helpers.sh"

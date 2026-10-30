@@ -114,11 +114,11 @@ A rebase stopped at an `edit` step also detaches `HEAD`. `/ianf-commit` and the 
 The scripts are tested with [shunit2](https://github.com/kward/shunit2), one `tests/<script>_test.sh` per script, each test named for the behaviour it asserts. With [devbox](https://www.jetify.com/devbox), nothing else is needed:
 
 ```sh
-devbox run test    # shunit2 and shellcheck come from devbox.json
-devbox run lint
+devbox run -- task test    # shunit2, shellcheck and Task come from devbox.json
+devbox run -- task lint
 ```
 
-Without devbox, install shunit2 (`brew install shunit2`, `apt install shunit2`) and run `sh tests/run.sh`. It finds shunit2 on `PATH`, or at `$SHUNIT2`. Every test runs in a throwaway repository with `HOME` redirected, so no real history is read.
+Without devbox, install shunit2 (`brew install shunit2`, `apt install shunit2`) and [Task](https://taskfile.dev), and run `task test`. The tests find shunit2 on `PATH`, or at `$SHUNIT2`. Every test runs in a throwaway repository with `HOME` redirected, so no real history is read.
 
 ## Problems
 

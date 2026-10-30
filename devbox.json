@@ -2,12 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.18.4/.schema/devbox.schema.json",
   "packages": [
     "shunit2@2.1.8",
-    "shellcheck@latest"
-  ],
-  "shell": {
-    "scripts": {
-      "test": "sh tests/run.sh",
-      "lint": "shellcheck --external-sources --shell sh $(find shared skills tests -name '*.sh' -type f)"
-    }
-  }
+    "shellcheck@latest",
+    "go-task@3.53.1"
+  ]
 }
