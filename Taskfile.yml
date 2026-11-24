@@ -19,3 +19,9 @@ tasks:
           sh "$t" || failed=1
         done
         exit "$failed"
+
+  check:
+    desc: Lint, then test, failing on any problem
+    cmds:
+      - task: lint
+      - task: test

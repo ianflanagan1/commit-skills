@@ -116,6 +116,7 @@ The scripts are tested with [shunit2](https://github.com/kward/shunit2), one `te
 ```sh
 devbox run -- task test    # shunit2, shellcheck and Task come from devbox.json
 devbox run -- task lint
+devbox run -- task check   # lint, then test, failing on any problem
 ```
 
 Without devbox, install shunit2 (`brew install shunit2`, `apt install shunit2`) and [Task](https://taskfile.dev), and run `task test`. The tests find shunit2 on `PATH`, or at `$SHUNIT2`. Every test runs in a throwaway repository with `HOME` redirected, so no real history is read.
